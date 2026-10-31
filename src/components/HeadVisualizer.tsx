@@ -1,12 +1,13 @@
 import React from 'react';
-import { Volume2, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { FrequencyBand } from '../data/iso226';
+import { Volume2, CheckCircle2, Waves, Radio } from 'lucide-react';
 
 interface HeadVisualizerProps {
   leftDb: number;
   rightDb: number;
   phaseInvert: boolean;
   isPlaying: boolean;
-  freqLabel: string;
+  currentBand: FrequencyBand;
 }
 
 export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
@@ -14,235 +15,265 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   rightDb,
   phaseInvert,
   isPlaying,
-  freqLabel,
+  currentBand,
 }) => {
-  // dB 차이를 -100% ~ +100% 수평 오프셋으로 환산 (차이가 0이면 0%)
-  // diff > 0 -> 오른쪽이 큼, diff < 0 -> 왼쪽이 큼
-  const diffDb = rightDb - leftDb;
-  // 최대 6dB 차이를 양 끝(100%)으로 매핑
-  const clampedRatio = Math.max(-1, Math.min(1, diffDb / 6));
-  const orbTranslateX = clampedRatio * 90; // SVG viewBox 내 픽셀 단위
+  // 좌/우 독립 진폭 배율 (0dB 기준 1.0, -10dB는 0.4, +10dB는 2.0)
+  const leftAmp = Math.max(0.3, Math.min(2.2, 1.0 + leftDb / 10));
+  const rightAmp = Math.max(0.3, Math.min(2.2, 1.0 + rightDb / 10));
 
+  // 좌/우 밸런스 차이
+  const diffDb = Number((rightDb - leftDb).toFixed(1));
   const isBalanced = Math.abs(diffDb) < 0.2;
 
-  return (
-    <div className="relative flex flex-col items-center justify-center p-6 bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-      {/* 배경 은은한 그리드 & 가이드라인 */}
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
+  // 좌/우 독립 음파 오프셋
+  const leftWaveOffset = leftDb * 3; // 픽셀 단위
+  const rightWaveOffset = rightDb * 3;
 
-      {/* 상태 헤더 */}
-      <div className="w-full flex items-center justify-between text-xs text-slate-400 mb-2 z-10">
+  return (
+    <div className="relative flex flex-col items-center justify-between p-4 bg-zinc-900/90 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden h-full">
+      {/* 배경 미세 그리드 */}
+      <div className="absolute inset-0 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:14px_14px] opacity-30 pointer-events-none" />
+
+      {/* 상단 밸런스 상태 텍스트 (컴팩트) */}
+      <div className="w-full flex items-center justify-between text-xs text-zinc-400 z-10 pb-1">
         <div className="flex items-center gap-1.5 font-medium">
-          <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping inline-block" />
-          <span>현재 테스트 음높이:</span>
-          <span className="text-blue-400 font-bold text-sm bg-blue-950/60 px-2 py-0.5 rounded border border-blue-800/60">
-            {freqLabel}
-          </span>
+          <Radio className="w-3.5 h-3.5 text-zinc-300" />
+          <span className="text-zinc-300">중심 음파 방사 가이드</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div>
           {isBalanced ? (
-            <span className="flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
-              <CheckCircle2 className="w-3.5 h-3.5" /> 정중앙 (완벽한 균형)
+            <span className="flex items-center gap-1 text-emerald-400 font-semibold bg-zinc-950 px-2.5 py-0.5 rounded-lg border border-emerald-900/60 text-[11px]">
+              <CheckCircle2 className="w-3 h-3" /> 양쪽 귀 균형 일치
             </span>
           ) : diffDb < 0 ? (
-            <span className="flex items-center gap-1 text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
-              <ArrowLeft className="w-3.5 h-3.5" /> 왼쪽으로 {Math.abs(diffDb).toFixed(1)} dB 치우침
+            <span className="text-zinc-300 bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-700 text-[11px]">
+              왼쪽이 <strong className="text-blue-400">+{Math.abs(diffDb)} dB</strong> 더 큼
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-amber-400 font-semibold bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/60">
-              오른쪽으로 {Math.abs(diffDb).toFixed(1)} dB 치우침 <ArrowRight className="w-3.5 h-3.5" />
+            <span className="text-zinc-300 bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-700 text-[11px]">
+              오른쪽이 <strong className="text-blue-400">+{diffDb} dB</strong> 더 큼
             </span>
           )}
         </div>
       </div>
 
-      {/* 머리 및 사운드 위치 일러스트레이션 (SVG) */}
-      <div className="relative w-full max-w-[340px] h-52 flex items-center justify-center my-1 z-10">
-        <svg viewBox="0 0 340 200" className="w-full h-full">
+      {/* 머리 중심 방사형 음파 일러스트레이션 (SVG) */}
+      <div className="relative w-full max-w-[320px] h-44 flex items-center justify-center z-10">
+        <svg viewBox="0 0 320 180" className="w-full h-full">
           <defs>
-            {/* 사운드 방울 글로우 효과 필터 */}
-            <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-            <linearGradient id="headGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
+            <radialGradient id="centerCoreGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="40%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="headMono" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#27272a" />
+              <stop offset="100%" stopColor="#18181b" />
             </linearGradient>
-            <radialGradient id="soundOrbGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="60%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#1d4ed8" />
-            </radialGradient>
-            <radialGradient id="soundOrbBalanced" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#34d399" />
-              <stop offset="60%" stopColor="#059669" />
-              <stop offset="100%" stopColor="#047857" />
-            </radialGradient>
           </defs>
 
-          {/* 중앙 수직 기준 점선 */}
+          {/* 중앙 수직 기준선 */}
           <line
-            x1="170"
-            y1="20"
-            x2="170"
-            y2="180"
-            stroke="#475569"
-            strokeDasharray="4 4"
+            x1="160"
+            y1="10"
+            x2="160"
+            y2="170"
+            stroke="#27272a"
+            strokeDasharray="3 3"
             strokeWidth="1.5"
           />
 
-          {/* 좌/우 음파 애니메이션 (재생 중일 때) */}
+          {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 (Concentric Expanding Waves) */}
           {isPlaying && (
-            <>
-              {/* 왼쪽 귀 음파 */}
+            <g transform="translate(160, 95)">
+              {/* 기본 중심 파동 */}
               <circle
-                cx="110"
-                cy="105"
-                r="22"
+                cx="0"
+                cy="0"
+                r="18"
                 fill="none"
-                stroke="#38bdf8"
-                strokeWidth="2"
+                stroke="#52525b"
+                strokeWidth="1.5"
                 className="animate-ping opacity-60"
-                style={{ animationDuration: '1.4s' }}
+                style={{ animationDuration: '1.2s' }}
               />
               <circle
-                cx="110"
-                cy="105"
+                cx="0"
+                cy="0"
                 r="36"
                 fill="none"
-                stroke="#38bdf8"
-                strokeWidth="1.5"
-                className="animate-ping opacity-30"
-                style={{ animationDuration: '2s' }}
-              />
-
-              {/* 오른쪽 귀 음파 */}
-              <circle
-                cx="230"
-                cy="105"
-                r="22"
-                fill="none"
-                stroke="#38bdf8"
-                strokeWidth="2"
-                className="animate-ping opacity-60"
-                style={{ animationDuration: '1.4s' }}
+                stroke="#3f3f46"
+                strokeWidth="1.2"
+                className="animate-ping opacity-40"
+                style={{ animationDuration: '2.0s' }}
               />
               <circle
-                cx="230"
-                cy="105"
-                r="36"
+                cx="0"
+                cy="0"
+                r="56"
                 fill="none"
-                stroke="#38bdf8"
-                strokeWidth="1.5"
-                className="animate-ping opacity-30"
-                style={{ animationDuration: '2s' }}
+                stroke="#27272a"
+                strokeWidth="1"
+                className="animate-ping opacity-20"
+                style={{ animationDuration: '2.8s' }}
               />
-            </>
+            </g>
           )}
 
-          {/* 머리 위에서 본 형상 (Top-down Head View) */}
-          <g transform="translate(170, 105)">
-            {/* 코 (위쪽을 향함) */}
+          {/* 2. 좌측 귀 개인화 독립 음파 (leftDb 반영) */}
+          <g
+            transform={`translate(${108 - leftWaveOffset * 0.4}, 95)`}
+            style={{ transition: 'transform 0.15s ease-out' }}
+          >
+            {/* 좌측 귀 파동 호 (Arc) */}
             <path
-              d="M -7 -45 Q 0 -62 7 -45 Z"
-              fill="#475569"
-              stroke="#64748b"
-              strokeWidth="2"
+              d="M -5 -25 A 30 30 0 0 0 -5 25"
+              fill="none"
+              stroke="#60a5fa"
+              strokeWidth={Math.max(1.5, 2 * leftAmp)}
+              opacity={isPlaying ? 0.9 : 0.4}
+              strokeLinecap="round"
             />
-            {/* 두상 (타원형) */}
+            <path
+              d="M -15 -35 A 44 44 0 0 0 -15 35"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth={Math.max(1, 1.5 * leftAmp)}
+              opacity={isPlaying ? 0.6 : 0.2}
+              strokeLinecap="round"
+            />
+            {/* 좌측 파동 포커스 점 */}
+            <circle
+              cx="-24"
+              cy="0"
+              r={Math.max(3, 4 * leftAmp)}
+              fill="#60a5fa"
+              opacity={isPlaying ? 0.9 : 0.4}
+            />
+          </g>
+
+          {/* 3. 우측 귀 개인화 독립 음파 (rightDb 반영) */}
+          <g
+            transform={`translate(${212 + rightWaveOffset * 0.4}, 95)`}
+            style={{ transition: 'transform 0.15s ease-out' }}
+          >
+            {/* 우측 귀 파동 호 (Arc) */}
+            <path
+              d="M 5 -25 A 30 30 0 0 1 5 25"
+              fill="none"
+              stroke="#60a5fa"
+              strokeWidth={Math.max(1.5, 2 * rightAmp)}
+              opacity={isPlaying ? 0.9 : 0.4}
+              strokeLinecap="round"
+            />
+            <path
+              d="M 15 -35 A 44 44 0 0 1 15 35"
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth={Math.max(1, 1.5 * rightAmp)}
+              opacity={isPlaying ? 0.6 : 0.2}
+              strokeLinecap="round"
+            />
+            {/* 우측 파동 포커스 점 */}
+            <circle
+              cx="24"
+              cy="0"
+              r={Math.max(3, 4 * rightAmp)}
+              fill="#60a5fa"
+              opacity={isPlaying ? 0.9 : 0.4}
+            />
+          </g>
+
+          {/* 4. 사람 머리 두상 (Top-down Head View - Monochrome) */}
+          <g transform="translate(160, 95)">
+            {/* 코 (위쪽) */}
+            <path
+              d="M -6 -42 Q 0 -58 6 -42 Z"
+              fill="#3f3f46"
+              stroke="#52525b"
+              strokeWidth="1.5"
+            />
+            {/* 두상 본체 */}
             <ellipse
               cx="0"
               cy="0"
-              rx="52"
-              ry="48"
-              fill="url(#headGrad)"
-              stroke="#64748b"
-              strokeWidth="2.5"
-            />
-            {/* 왼쪽 귀 */}
-            <rect
-              x="-60"
-              y="-12"
-              width="10"
-              height="24"
-              rx="5"
-              fill="#475569"
-              stroke="#64748b"
+              rx="48"
+              ry="44"
+              fill="url(#headMono)"
+              stroke="#52525b"
               strokeWidth="2"
             />
-            <text x="-76" y="4" fill="#94a3b8" fontSize="11" fontWeight="bold" textAnchor="middle">
-              L (좌)
-            </text>
 
-            {/* 오른쪽 귀 */}
+            {/* 좌측 귀 */}
             <rect
-              x="50"
+              x="-56"
               y="-12"
-              width="10"
+              width="9"
               height="24"
-              rx="5"
-              fill="#475569"
-              stroke="#64748b"
-              strokeWidth="2"
+              rx="4.5"
+              fill="#3f3f46"
+              stroke="#71717a"
+              strokeWidth="1.5"
             />
-            <text x="76" y="4" fill="#94a3b8" fontSize="11" fontWeight="bold" textAnchor="middle">
-              R (우)
+            <text x="-70" y="4" fill="#a1a1aa" fontSize="10" fontWeight="bold" textAnchor="middle">
+              L
             </text>
 
-            {/* 눈/시선 방향 안내 라벨 */}
-            <text x="0" y="-20" fill="#64748b" fontSize="9" textAnchor="middle" letterSpacing="1">
-              ▲ 앞방향 (모니터)
+            {/* 우측 귀 */}
+            <rect
+              x="47"
+              y="-12"
+              width="9"
+              height="24"
+              rx="4.5"
+              fill="#3f3f46"
+              stroke="#71717a"
+              strokeWidth="1.5"
+            />
+            <text x="70" y="4" fill="#a1a1aa" fontSize="10" fontWeight="bold" textAnchor="middle">
+              R
             </text>
 
-            {/* 정중앙 타겟 마커 */}
-            <circle cx="0" cy="0" r="10" fill="none" stroke="#475569" strokeWidth="1.5" strokeDasharray="2 2" />
-            <circle cx="0" cy="0" r="3" fill="#64748b" />
-          </g>
-
-          {/* 소리 중심 위치 표시 구체 (Sound Orb) - 수평 위치가 실시간 이동 */}
-          <g
-            style={{
-              transform: `translate(${170 + orbTranslateX}px, 105px)`,
-              transition: 'transform 0.12s cubic-bezier(0.2, 0.8, 0.4, 1)',
-            }}
-          >
-            {/* 소리 방울 후광 효과 */}
+            {/* 머리 중심 발원 코어 (Center Core) */}
             <circle
               cx="0"
               cy="0"
-              r="20"
+              r={isBalanced ? 12 : 9}
               fill={isBalanced ? '#10b981' : '#3b82f6'}
-              opacity="0.35"
+              opacity={isPlaying ? 0.8 : 0.3}
               className={isPlaying ? 'animate-pulse' : ''}
-              filter="url(#glow)"
             />
-            {/* 소리 방울 본체 */}
-            <circle
-              cx="0"
-              cy="0"
-              r="12"
-              fill={isBalanced ? 'url(#soundOrbBalanced)' : 'url(#soundOrbGrad)'}
-              stroke="#ffffff"
-              strokeWidth="2"
-            />
-            {/* 중앙 포인트 */}
             <circle cx="0" cy="0" r="3" fill="#ffffff" />
+
+            <text x="0" y="-18" fill="#71717a" fontSize="8" textAnchor="middle" letterSpacing="1">
+              ▲ 정면 (모니터)
+            </text>
           </g>
         </svg>
 
-        {/* 위상 반전 배지 알림 */}
         {phaseInvert && (
-          <div className="absolute bottom-1 bg-purple-950/90 text-purple-200 border border-purple-500/60 text-[11px] font-medium px-2.5 py-0.5 rounded-full shadow-md backdrop-blur-sm">
-            ⚡ 180° 위상 반전 활성화됨 (소리 뭉침 방지)
+          <div className="absolute bottom-0 bg-purple-950/90 text-purple-200 border border-purple-500/50 text-[10px] font-medium px-2 py-0.5 rounded-full shadow">
+            180° 위상 반전 적용됨
           </div>
         )}
       </div>
 
-      {/* 사용자 직관 안내 텍스트 */}
-      <div className="mt-1 text-center text-xs text-slate-300 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700/60 max-w-sm">
-        💡 <strong className="text-blue-300">목표:</strong> 소리가 내 머리의 <strong>정중앙 한가운데</strong>에서 똑바로 들리도록 아래 슬라이더를 부드럽게 움직여 맞추세요.
+      {/* 하단 주파수 대역 표시 박스 (주파수 바뀔 때마다 갱신) */}
+      <div className="w-full mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between text-xs z-10">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-zinc-500">현재 대역:</span>
+          <span className="font-mono font-bold text-sm text-zinc-100 bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
+            {currentBand.label}
+          </span>
+          <span className="text-[11px] text-zinc-400 font-medium hidden sm:inline">
+            ({currentBand.freq} Hz)
+          </span>
+        </div>
+
+        <div className="text-[11px] text-zinc-400 truncate max-w-[170px] text-right">
+          {currentBand.description}
+        </div>
       </div>
     </div>
   );
