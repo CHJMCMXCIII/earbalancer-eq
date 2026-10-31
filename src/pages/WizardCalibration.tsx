@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   FREQUENCY_BANDS,
-  TEN_BAND_INDICES,
   FrequencyBand,
-  interpolate10to31Bands,
 } from '../data/iso226';
 import { audioEngine } from '../audio/AudioEngine';
 import { HeadVisualizer } from '../components/HeadVisualizer';
@@ -12,7 +10,6 @@ import {
   Square,
   ChevronLeft,
   ChevronRight,
-  Wand2,
   RotateCcw,
   Lock,
   ArrowRight,
@@ -22,8 +19,8 @@ import {
 } from 'lucide-react';
 
 interface WizardCalibrationProps {
-  mode: '10-band' | '31-band';
-  setMode: (mode: '10-band' | '31-band') => void;
+  mode?: '10-band' | '31-band';
+  setMode?: (mode: '10-band' | '31-band') => void;
   calibrations: { leftDb: number; rightDb: number; phaseInvert: boolean }[];
   setCalibrations: React.Dispatch<
     React.SetStateAction<{ leftDb: number; rightDb: number; phaseInvert: boolean }[]>
@@ -33,18 +30,16 @@ interface WizardCalibrationProps {
 }
 
 export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
-  mode,
-  setMode,
   calibrations,
   setCalibrations,
   onGoToABTest,
 }) => {
-  const activeBandIndices =
-    mode === '10-band' ? TEN_BAND_INDICES : FREQUENCY_BANDS.map((_, i) => i);
+  // 31단계 단독 전면 제공
+  const activeBandIndices = FREQUENCY_BANDS.map((_, i) => i);
 
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [interpNotice, setInterpNotice] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const currentBandId = activeBandIndices[currentStepIndex] ?? 0;
   const currentBandInfo: FrequencyBand = FREQUENCY_BANDS[currentBandId];
@@ -115,8 +110,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     const currentR = currentBandCalib.rightDb;
 
     if (currentL === 0 && currentR === 0) {
-      setInterpNotice('💡 현재 좌/우 보정값이 모두 0.0 dB라 동일합니다. 슬라이더를 조절한 후 맞바꿔보세요.');
-      setTimeout(() => setInterpNotice(null), 3000);
+      setActionNotice('💡 현재 좌/우 보정값이 모두 0.0 dB라 동일합니다. 슬라이더를 조절한 후 맞바꿔보세요.');
+      setTimeout(() => setActionNotice(null), 3000);
       return;
     }
 
@@ -137,8 +132,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
       );
     }
 
-    setInterpNotice(`⇄ 좌/우 채널 보정값이 맞바뀌었습니다! (L: ${currentR > 0 ? '+' : ''}${currentR.toFixed(1)} dB / R: ${currentL > 0 ? '+' : ''}${currentL.toFixed(1)} dB)`);
-    setTimeout(() => setInterpNotice(null), 3500);
+    setActionNotice(`⇄ 좌/우 채널 보정값이 맞바뀌었습니다! (L: ${currentR > 0 ? '+' : ''}${currentR.toFixed(1)} dB / R: ${currentL > 0 ? '+' : ''}${currentL.toFixed(1)} dB)`);
+    setTimeout(() => setActionNotice(null), 3500);
   };
 
   // 위상 반전 (Phase Invert) 기능
@@ -160,8 +155,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
       );
     }
 
-    setInterpNotice(newPhase ? '⚡ 180° 위상 반전이 켜졌습니다 (소리를 모아줍니다).' : '위상이 정상(0°)으로 복구되었습니다.');
-    setTimeout(() => setInterpNotice(null), 3000);
+    setActionNotice(newPhase ? '⚡ 180° 위상 반전이 켜졌습니다 (소리를 모아줍니다).' : '위상이 정상(0°)으로 복구되었습니다.');
+    setTimeout(() => setActionNotice(null), 3000);
   };
 
   const handleResetCurrent = () => {
@@ -192,29 +187,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  const handleInterpolateAll = () => {
-    const tenBandMap: { [id: number]: { leftDb: number; rightDb: number; phaseDeg: number } } = {};
-    TEN_BAND_INDICES.forEach((idx) => {
-      const c = calibrations[idx] || { leftDb: 0, rightDb: 0, phaseInvert: false };
-      tenBandMap[idx] = {
-        leftDb: c.leftDb,
-        rightDb: c.rightDb,
-        phaseDeg: c.phaseInvert ? 180 : 0,
-      };
-    });
-
-    const interpolated = interpolate10to31Bands(tenBandMap);
-    const newCalibs = interpolated.map((item) => ({
-      leftDb: item.leftDb,
-      rightDb: item.rightDb,
-      phaseInvert: item.phaseDeg >= 90,
-    }));
-
-    setCalibrations(newCalibs);
-    setInterpNotice('✨ 31개 전체 주파수가 좌/우 맞춤값에 맞춰 자동 계산되었습니다!');
-    setTimeout(() => setInterpNotice(null), 3500);
-  };
-
   useEffect(() => {
     return () => {
       audioEngine.stopTone();
@@ -223,114 +195,62 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
   return (
     <div className="flex flex-col justify-start items-stretch gap-3.5 w-full">
-      {/* 1. 최상단으로 이동한 핵심 내비게이션 & 제어 바 (IBM Carbon Card) */}
-      <div className="p-2.5 carbon-card rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs">
-        {/* 이전 / 다음 음높이 버튼 & 도트 */}
-        <div className="flex items-center gap-2">
+      {/* 1. 최상단으로 이동한 핵심 내비게이션 & 제어 바 (IBM Carbon Card) - 31밴드 좌우 꽉 차게 배치 */}
+      <div className="p-2.5 carbon-card rounded-xl shadow-xs flex items-center justify-between gap-2 sm:gap-3 text-xs w-full">
+        {/* 이전 음높이 버튼 */}
+        <button
+          onClick={() => handleStepChange(currentStepIndex - 1)}
+          disabled={currentStepIndex === 0}
+          className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] disabled:opacity-30 disabled:pointer-events-none text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span>이전</span>
+        </button>
+
+        {/* 31개 주파수 스텝 인디케이터 도트 (좌우 꽉 차게 균등 배치) */}
+        <div className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 overflow-x-auto py-1 px-1">
+          {activeBandIndices.map((bIdx, idx) => {
+            const isDone =
+              calibrations[bIdx].leftDb !== 0 ||
+              calibrations[bIdx].rightDb !== 0 ||
+              calibrations[bIdx].phaseInvert;
+            const isCurrent = idx === currentStepIndex;
+
+            return (
+              <button
+                key={bIdx}
+                onClick={() => handleStepChange(idx)}
+                title={`${FREQUENCY_BANDS[bIdx].label} (${FREQUENCY_BANDS[bIdx].freq}Hz)`}
+                className={`h-2 sm:h-2.5 rounded-full transition-all duration-150 cursor-pointer flex-shrink-0 ${
+                  isCurrent
+                    ? 'w-5 sm:w-6 bg-[#0f62fe]'
+                    : isDone
+                    ? 'w-2 sm:w-2.5 bg-emerald-500'
+                    : 'w-2 sm:w-2.5 bg-[#c6c6c6] dark:bg-[#525252] hover:bg-[#8d8d8d]'
+                }`}
+              />
+            );
+          })}
+        </div>
+
+        {/* 다음 음높이 버튼 또는 비교하기 이동 버튼 */}
+        {currentStepIndex < activeBandIndices.length - 1 ? (
           <button
-            onClick={() => handleStepChange(currentStepIndex - 1)}
-            disabled={currentStepIndex === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] disabled:opacity-30 disabled:pointer-events-none text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
+            onClick={() => handleStepChange(currentStepIndex + 1)}
+            className="flex-shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded font-semibold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>이전</span>
+            <span>다음</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
-
-          {/* 주파수 스텝 인디케이터 도트 */}
-          <div className="flex items-center gap-1 overflow-x-auto max-w-[160px] sm:max-w-xs px-1">
-            {activeBandIndices.map((bIdx, idx) => {
-              const isDone =
-                calibrations[bIdx].leftDb !== 0 ||
-                calibrations[bIdx].rightDb !== 0 ||
-                calibrations[bIdx].phaseInvert;
-              const isCurrent = idx === currentStepIndex;
-
-              return (
-                <button
-                  key={bIdx}
-                  onClick={() => handleStepChange(idx)}
-                  title={`${FREQUENCY_BANDS[bIdx].label}`}
-                  className={`h-2 rounded-full transition-all duration-150 cursor-pointer ${
-                    isCurrent
-                      ? 'w-4 bg-[#0f62fe]'
-                      : isDone
-                      ? 'w-2 bg-emerald-500'
-                      : 'w-2 bg-[#c6c6c6] dark:bg-[#525252] hover:bg-[#8d8d8d]'
-                  }`}
-                />
-              );
-            })}
-          </div>
-
-          {currentStepIndex < activeBandIndices.length - 1 ? (
-            <button
-              onClick={() => handleStepChange(currentStepIndex + 1)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded font-semibold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
-            >
-              <span>다음</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <button
-              onClick={onGoToABTest}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded font-bold bg-[#198038] hover:bg-[#0e6027] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
-            >
-              <span>비교하기</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* 10단계 간편 모드 시에만 노출되는 '한 번에 채우기' (토글 좌측에 배치) & 모드 토글 */}
-        <div className="flex items-center gap-2">
-          {interpNotice && (
-            <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold hidden sm:inline">
-              {interpNotice}
-            </span>
-          )}
-
-          {/* 10단계 간편 모드 활성화 시에만 토글 좌측에 노출 */}
-          {mode === '10-band' && (
-            <button
-              onClick={handleInterpolateAll}
-              title="10개 주파수 값을 바탕으로 31개 전체 대역을 보간합니다"
-              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer"
-            >
-              <Wand2 className="w-3.5 h-3.5 text-[#0f62fe]" />
-              <span>한 번에 채우기</span>
-            </button>
-          )}
-
-          {/* 10단계 / 31단계 모드 토글 */}
-          <div className="inline-flex p-0.5 bg-[#e8e8e8] dark:bg-[#161616] rounded border border-[#e0e0e0] dark:border-[#393939]">
-            <button
-              onClick={() => {
-                setMode('10-band');
-                setCurrentStepIndex(0);
-              }}
-              className={`px-2.5 py-1 rounded font-semibold transition-all duration-150 text-xs cursor-pointer ${
-                mode === '10-band'
-                  ? 'bg-white dark:bg-[#262626] text-[#0f62fe] dark:text-[#0f62fe] shadow-xs'
-                  : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
-              }`}
-            >
-              10단계 간편
-            </button>
-            <button
-              onClick={() => {
-                setMode('31-band');
-                setCurrentStepIndex(0);
-              }}
-              className={`px-2.5 py-1 rounded font-semibold transition-all duration-150 text-xs cursor-pointer ${
-                mode === '31-band'
-                  ? 'bg-white dark:bg-[#262626] text-[#0f62fe] dark:text-[#0f62fe] shadow-xs'
-                  : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
-              }`}
-            >
-              31단계 정밀
-            </button>
-          </div>
-        </div>
+        ) : (
+          <button
+            onClick={onGoToABTest}
+            className="flex-shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded font-bold bg-[#198038] hover:bg-[#0e6027] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
+          >
+            <span>비교하기</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* 2. 메인 2컬럼 레이아웃 (items-stretch: 긴 쪽 길이로 맞추고, 짧은 쪽은 상-하로 퍼지도록 justify-between) */}
@@ -378,6 +298,20 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               <span>현재 음높이 리셋</span>
             </button>
+          </div>
+
+          {actionNotice && (
+            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-600 text-xs font-semibold text-emerald-800 dark:text-emerald-200 transition-all duration-150">
+              {actionNotice}
+            </div>
+          )}
+
+          {/* 보청기 원리 기반 권장 안내 팁 배너 */}
+          <div className="p-2.5 rounded-lg bg-[#edf5ff] dark:bg-[#002d9c]/25 border border-[#d0e2ff] dark:border-[#0043ce]/60 flex items-center gap-2 text-[11px] text-[#0043ce] dark:text-[#78a9ff]">
+            <span className="flex-shrink-0 text-xs">💡</span>
+            <span className="leading-tight">
+              <strong>조절 팁:</strong> 잘 들리는 쪽을 낮추기보다, 보청기처럼 <strong>덜 들리는 쪽 귀의 볼륨을 올려서(+)</strong> 머리 중심으로 맞추면 소리가 답답해지지 않고 시원하게 들려요.
+            </span>
           </div>
 
           {/* 왼쪽 귀 (Left Channel) 채널 분리 슬라이더 (0.1 dB 단위 고정) */}

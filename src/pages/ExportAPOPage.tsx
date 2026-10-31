@@ -25,14 +25,12 @@ import {
 interface ExportAPOPageProps {
   calibrations: BandState[];
   setCalibrations: React.Dispatch<React.SetStateAction<BandState[]>>;
-  mode: '10-band' | '31-band';
   onBackToABTest: () => void;
 }
 
 export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   calibrations,
   setCalibrations,
-  mode,
   onBackToABTest,
 }) => {
   const [profileName, setProfileName] = useState<string>('내 헤드폰');
@@ -130,7 +128,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     const newProfile: Profile = {
       id: existingIdx >= 0 ? profiles[existingIdx].id : `profile-${Date.now()}`,
       name: profileName,
-      mode: mode,
+      mode: '31-band',
       updatedAt: new Date().toISOString(),
       calibrations: [...calibrations],
     };
@@ -278,47 +276,25 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
           </div>
 
-          {/* 이원화 옵션 카드: 옵션 1 (자동 반영) vs 옵션 2 (다운로드) */}
+          {/* 설정 파일 다운로드 영역 (자동 반영 카드는 추후 Rust/Go 스탠드얼론 앱 개발 시 추가 예정으로 숨김 처리) */}
           <div className="space-y-3 my-auto">
-            {/* 옵션 1: 자동 반영하기 */}
-            <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <div className="text-xs sm:text-sm font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-amber-500" />
-                  <span>옵션 1: Equalizer APO에 자동 반영하기 (권장)</span>
-                </div>
-                <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-                  APO config.txt로 바로 저장하여 재부팅 없이 실시간 적용
-                </div>
-              </div>
-
-              <button
-                onClick={handleAutoApplyToAPO}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded font-bold text-xs bg-[#198038] hover:bg-[#0e6027] text-white shadow-xs transition-all duration-150 cursor-pointer"
-              >
-                <Zap className="w-3.5 h-3.5" />
-                <span>자동 반영 적용</span>
-              </button>
-            </div>
-
-            {/* 옵션 2: 파일 다운로드하기 */}
-            <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between gap-3">
+            <div className="p-3.5 carbon-subcard rounded-lg flex items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <div className="text-xs sm:text-sm font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5">
                   <Download className="w-4 h-4 text-[#0f62fe]" />
-                  <span>옵션 2: 설정 파일 (.txt) 직접 다운로드</span>
+                  <span>Equalizer APO 설정 파일 (.txt) 다운로드</span>
                 </div>
                 <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-                  수동 보관 또는 다른 PC용 설정 파일 저장
+                  내 귀에 맞춘 31밴드 캘리브레이션 값을 담은 공식 GraphicEQ 파일을 내려받습니다.
                 </div>
               </div>
 
               <button
                 onClick={handleDownloadBackup}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded font-semibold text-xs bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer shadow-xs"
+                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded font-bold text-xs bg-[#0f62fe] hover:bg-[#0353e9] text-white shadow-xs transition-all duration-150 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>파일 다운로드</span>
+                <span>설정 파일 다운로드</span>
               </button>
             </div>
           </div>
@@ -405,38 +381,24 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
 
             {/* 단계별 쉬운 가이드 */}
-            <div className="space-y-3 text-xs sm:text-sm text-[#525252] dark:text-[#c6c6c6] leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-3 text-xs text-[#525252] dark:text-[#c6c6c6] leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
               <div className="p-3 bg-[#edf5ff] dark:bg-[#002d9c]/30 rounded-lg border border-[#d0e2ff] dark:border-[#0043ce] flex items-start gap-2.5">
                 <Info className="w-4 h-4 text-[#0f62fe] flex-shrink-0 mt-0.5" />
                 <span className="text-xs text-[#002d9c] dark:text-[#78a9ff]">
-                  Equalizer APO는 윈도우의 사운드를 주파수별로 실시간 보정해주는 무료 프로그램입니다. 아래 방법 중 편한 것을 선택하세요!
+                  Equalizer APO는 윈도우의 사운드를 주파수별로 실시간 보정해주는 무료 프로그램입니다. 아래 순서대로 적용해주세요!
                 </span>
               </div>
 
-              {/* 방법 1: 가장 추천하는 자동 반영 */}
-              <div className="p-3 carbon-subcard rounded-lg space-y-1.5">
-                <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>방법 1: [자동 반영 적용] 버튼 사용 (가장 쉬움)</span>
-                </div>
-                <ol className="text-xs text-[#525252] dark:text-[#c6c6c6] list-decimal list-inside space-y-1 pl-1">
-                  <li>화면의 초록색 <strong>[자동 반영 적용]</strong> 버튼을 누릅니다.</li>
-                  <li>파일 저장 창이 열리면 <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded text-[#0f62fe] dark:text-[#78a9ff] font-mono">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동하여 <strong>config.txt</strong>로 저장합니다.</li>
-                  <li>저장하는 순간 윈도우 사운드에 즉시 실시간 적용됩니다!</li>
-                </ol>
-              </div>
-
-              {/* 방법 2: 수동 파일 다운로드 및 Include */}
-              <div className="p-3 carbon-subcard rounded-lg space-y-1.5">
+              {/* 설정 파일 적용 순서 */}
+              <div className="p-3 carbon-subcard rounded-lg space-y-2">
                 <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
                   <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
-                  <span>방법 2: 파일 다운로드 후 직접 추가하기</span>
+                  <span>설정 파일 반영 방법 (3단계)</span>
                 </div>
-                <ol className="text-xs text-[#525252] dark:text-[#c6c6c6] list-decimal list-inside space-y-1 pl-1">
-                  <li><strong>[파일 다운로드]</strong> 버튼을 눌러 설정 텍스트 파일을 내려받습니다.</li>
-                  <li>다운로드한 파일을 <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 안에 넣습니다.</li>
-                  <li>시작 메뉴에서 <strong>Configuration Editor</strong>를 실행합니다.</li>
-                  <li>초록색 <strong>+</strong> 버튼 ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>을 선택한 후 방금 넣은 파일을 지정하면 끝납니다.</li>
+                <ol className="text-xs text-[#525252] dark:text-[#c6c6c6] list-decimal list-inside space-y-1.5 pl-1">
+                  <li><strong>[설정 파일 다운로드]</strong> 버튼을 눌러 보정 파일(.txt)을 내려받습니다.</li>
+                  <li>다운로드한 파일을 <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동합니다.</li>
+                  <li>시작 메뉴에서 <strong>Configuration Editor</strong>를 실행한 뒤, 초록색 <strong>+</strong> ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>에서 해당 파일을 불러오거나, 기존 <strong>config.txt</strong>에 내용을 붙여넣으시면 시스템 사운드에 즉시 적용됩니다.</li>
                 </ol>
               </div>
 

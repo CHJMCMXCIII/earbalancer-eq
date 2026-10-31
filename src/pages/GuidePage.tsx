@@ -84,6 +84,9 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
           <p className="text-xs text-[#525252] dark:text-[#c6c6c6] leading-relaxed">
             음높이별 소리를 듣고, 소리가 머리 정중앙에서 똑바로 울릴 때까지 좌우 슬라이더를 살짝 움직여보세요.
           </p>
+          <div className="p-2 rounded bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/50 text-[11px] text-emerald-800 dark:text-emerald-200 leading-tight">
+            💡 <strong>추천 방법:</strong> 잘 들리는 쪽을 깎기보다, 보청기처럼 <strong>덜 들리는 쪽 귀의 볼륨을 살짝 올려서(+)</strong> 맞추는 것이 소리가 훨씬 자연스러워요.
+          </div>
         </div>
 
         {/* Step 3 */}
