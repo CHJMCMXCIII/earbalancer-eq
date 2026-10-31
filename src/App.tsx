@@ -79,9 +79,6 @@ export function App() {
                 <h1 className="font-bold text-sm tracking-tight text-[#161616] dark:text-[#f4f4f4]">
                   EarBalancer EQ
                 </h1>
-                <span className="px-1.5 py-0.5 text-[10px] bg-[#f4f4f4] dark:bg-[#393939] text-[#161616] dark:text-[#f4f4f4] rounded font-semibold border border-[#e0e0e0] dark:border-[#525252]">
-                  양쪽 청각 보정
-                </span>
               </div>
             </div>
           </div>
