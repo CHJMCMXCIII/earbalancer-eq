@@ -39,15 +39,15 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
         <div>
           {isBalanced ? (
-            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-3 py-1 rounded border border-emerald-300 dark:border-emerald-800 text-xs">
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 text-[11px]">
               <CheckCircle2 className="w-3.5 h-3.5" /> 양쪽 귀 균형 일치
             </span>
           ) : diffDb < 0 ? (
-            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2.5 py-1 rounded border border-[#e0e0e0] dark:border-[#393939] text-xs">
+            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939] text-[11px]">
               왼쪽이 <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{Math.abs(diffDb).toFixed(1)} dB</strong> 더 큼
             </span>
           ) : (
-            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2.5 py-1 rounded border border-[#e0e0e0] dark:border-[#393939] text-xs">
+            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939] text-[11px]">
               오른쪽이 <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{diffDb.toFixed(1)} dB</strong> 더 큼
             </span>
           )}
@@ -264,25 +264,25 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         </svg>
 
         {phaseInvert && (
-          <div className="absolute bottom-0 bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-200 border border-purple-300 dark:border-purple-600 text-xs font-semibold px-2.5 py-1 rounded-full shadow-xs">
+          <div className="absolute bottom-0 bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-200 border border-purple-300 dark:border-purple-600 text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-xs">
             180° 위상 반전 적용됨
           </div>
         )}
       </div>
 
-      {/* 하단 주파수 대역 표시 박스 (최소 12px) */}
-      <div className="w-full mt-2 pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex flex-col items-center justify-between text-xs sm:text-sm z-10">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[#525252] dark:text-[#8d8d8d]">현재 대역:</span>
-          <span className="font-mono font-bold text-sm text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2.5 py-1 rounded border border-[#e0e0e0] dark:border-[#393939]">
+      {/* 하단 주파수 대역 표시 박스 (10~12px) */}
+      <div className="w-full mt-2 pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex flex-col items-center justify-between text-xs z-10">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">현재 대역:</span>
+          <span className="font-mono font-bold text-xs text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939]">
             {currentBand.label}
           </span>
-          <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
+          <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
             ({currentBand.freq} Hz)
           </span>
         </div>
 
-        <div className="mt-2 text-xs xs:text-xs text-[#525252] dark:text-[#c6c6c6] text-center font-small">
+        <div className="mt-1 text-[11px] text-[#525252] dark:text-[#c6c6c6] text-center">
           {currentBand.description}
         </div>
       </div>

@@ -203,19 +203,19 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       <div className="flex items-center justify-between p-2.5 carbon-card rounded-xl shadow-xs text-xs">
         <button
           onClick={onBackToCalibration}
-          className="flex items-center gap-1 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer"
+          className="flex items-center gap-1 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>다시 세부 조절하기</span>
         </button>
 
-        <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
+        <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
           🎧 양쪽 귀 감도 보정 전/후 소리를 실시간으로 비교해보세요
         </span>
 
         <button
           onClick={onGoToExport}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded font-bold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer"
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded font-bold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
         >
           <span>Equalizer APO에 저장하기</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -223,19 +223,19 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       </div>
 
       {/* 2. 향상된 오디오 플레이어 (파일명 유지, 빠른 반응 재생바, IBM Carbon Motion) */}
-      <div className="p-3.5 carbon-card rounded-xl shadow-xs space-y-2.5">
+      <div className="p-3 carbon-card rounded-xl shadow-xs space-y-2">
         {/* 상단 정보: 좌측 파일명 / 우측 재생·일시정지 컨트롤 */}
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           {/* 좌측: 현재 음원 파일명 및 업로드 버튼 (탭 전환 시에도 유지) */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 carbon-subcard px-2.5 py-1.5 rounded text-[#161616] dark:text-[#f4f4f4] font-medium max-w-[220px] sm:max-w-xs shadow-xs">
+            <div className="flex items-center gap-1.5 carbon-subcard px-2.5 py-1 rounded text-[#161616] dark:text-[#f4f4f4] font-medium max-w-[220px] sm:max-w-xs shadow-xs">
               <Music className="w-3.5 h-3.5 text-[#0f62fe] flex-shrink-0" />
               <span className="truncate text-xs font-semibold">
                 {customFileName ? customFileName : '기본 내장 앰비언트 코드'}
               </span>
             </div>
 
-            <label className="cursor-pointer px-2.5 py-1.5 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-medium border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center gap-1 shadow-xs">
+            <label className="cursor-pointer px-2.5 py-1 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-medium border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center gap-1 shadow-xs">
               <Upload className="w-3.5 h-3.5 text-[#0f62fe]" />
               <span>내 음악 열기</span>
               <input
@@ -249,14 +249,14 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
 
           {/* 우측: 재생 / 일시정지 / 정지 버튼 및 시간 표시 */}
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-[#525252] dark:text-[#8d8d8d]">
+            <span className="font-mono text-[10px] sm:text-[11px] text-[#525252] dark:text-[#8d8d8d]">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
             {/* 재생 / 일시정지 토글 버튼 */}
             <button
               onClick={handleTogglePlay}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded font-bold text-xs shadow-xs transition-all duration-150 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded font-bold text-xs shadow-xs transition-all duration-150 cursor-pointer ${
                 isPlaying
                   ? 'bg-amber-600 hover:bg-amber-700 text-white'
                   : 'bg-[#0f62fe] hover:bg-[#0353e9] text-white'
@@ -300,7 +300,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
           onClick={handleSeek}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className="relative w-full h-3 bg-[#e0e0e0] dark:bg-[#393939] rounded-full cursor-pointer overflow-visible group"
+          className="relative w-full h-2.5 bg-[#e0e0e0] dark:bg-[#393939] rounded-full cursor-pointer overflow-visible group"
         >
           {/* 채워진 진행 바: 드래그/클릭 시 transition-none으로 지연 없이 즉각 추적, 일반 재생 시 100ms Carbon curve 적용 */}
           <div
@@ -315,7 +315,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
           {/* 마우스 올렸을 때 나타나는 툴팁 (현재 가리키는 초 표시) */}
           {hoverTime !== null && (
             <div
-              className="absolute -top-7 -translate-x-1/2 bg-[#161616] text-[#f4f4f4] dark:bg-[#f4f4f4] dark:text-[#161616] text-xs font-mono font-bold px-2 py-0.5 rounded shadow pointer-events-none z-20"
+              className="absolute -top-6 -translate-x-1/2 bg-[#161616] text-[#f4f4f4] dark:bg-[#f4f4f4] dark:text-[#161616] text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow pointer-events-none z-20"
               style={{ left: `${hoverX}px` }}
             >
               {formatTime(hoverTime)}
@@ -325,52 +325,52 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       </div>
 
       {/* 3. A / B 핵심 전환 스위치 (무중단 끊김 없는 실시간 전환) */}
-      <div className="p-4 carbon-card rounded-xl shadow-xs">
+      <div className="p-3.5 carbon-card rounded-xl shadow-xs">
         <div className="grid grid-cols-2 gap-3">
           {/* Option A: 보정 전 */}
           <button
             onClick={() => handleToggleBypass(true)}
-            className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border transition-all duration-150 cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-3.5 px-3 rounded-lg border transition-all duration-150 cursor-pointer ${
               isBypass
                 ? 'bg-[#161616] text-white dark:bg-[#f4f4f4] dark:text-[#161616] font-bold border-[#161616] dark:border-white shadow-md'
                 : 'carbon-subcard hover:border-[#8d8d8d]'
             }`}
           >
-            <span className="text-xs tracking-wider uppercase opacity-75 font-semibold">Option A</span>
-            <span className="text-base sm:text-lg font-bold mt-1">보정 전 (원본 소리)</span>
-            <span className="text-xs opacity-75 mt-1">양쪽 귀 불균형 상태 그대로</span>
+            <span className="text-[10px] tracking-wider uppercase opacity-75 font-semibold">Option A</span>
+            <span className="text-sm sm:text-base font-bold mt-0.5">보정 전 (원본 소리)</span>
+            <span className="text-[11px] opacity-75 mt-0.5">양쪽 귀 불균형 상태 그대로</span>
           </button>
 
           {/* Option B: 보정 후 (라이트/다크 모드 고대비 가독성 최적화) */}
           <button
             onClick={() => handleToggleBypass(false)}
-            className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border transition-all duration-150 cursor-pointer ${
+            className={`flex flex-col items-center justify-center py-3.5 px-3 rounded-lg border transition-all duration-150 cursor-pointer ${
               !isBypass
                 ? 'bg-[#0f62fe] text-white font-bold border-[#0f62fe] shadow-lg shadow-[#0f62fe]/20'
                 : 'carbon-subcard hover:border-[#0f62fe]'
             }`}
           >
             <span
-              className={`text-xs tracking-wider uppercase font-semibold ${
+              className={`text-[10px] tracking-wider uppercase font-semibold ${
                 !isBypass ? 'text-white/90' : 'text-[#0f62fe] dark:text-[#78a9ff]'
               }`}
             >
               Option B (추천)
             </span>
             <span
-              className={`text-base sm:text-lg font-bold mt-1 flex items-center gap-1.5 ${
+              className={`text-sm sm:text-base font-bold mt-0.5 flex items-center gap-1.5 ${
                 !isBypass ? 'text-white' : 'text-[#161616] dark:text-[#f4f4f4]'
               }`}
             >
               <span>내 귀 맞춤 소리</span>
               <CheckCircle
-                className={`w-4 h-4 ${
+                className={`w-3.5 h-3.5 ${
                   !isBypass ? 'text-emerald-300' : 'text-[#198038] dark:text-[#42be65]'
                 }`}
               />
             </span>
             <span
-              className={`text-xs mt-1 font-medium ${
+              className={`text-[11px] mt-0.5 font-medium ${
                 !isBypass ? 'text-blue-100' : 'text-[#525252] dark:text-[#c6c6c6]'
               }`}
             >
@@ -383,18 +383,18 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       {/* 4. 31밴드 좌/우 보정 곡선 미리보기 그래프 (인터랙티브 Legend 클릭 시 강조 및 투명도 조절) */}
       <div className="p-3 carbon-card rounded-xl shadow-xs space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span className="font-semibold text-[#161616] dark:text-[#f4f4f4]">
+          <span className="font-semibold text-xs text-[#161616] dark:text-[#f4f4f4]">
             내 청각 캘리브레이션 주파수 곡선
           </span>
 
           {/* 클릭 가능한 범례(Legend) 버튼 그룹 */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-xs text-[#525252] dark:text-[#8d8d8d] mr-1 hidden sm:inline">채널 선택:</span>
+            <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] mr-1 hidden sm:inline">채널 선택:</span>
             
             {/* 전체 보기 */}
             <button
               onClick={() => setActiveLegend('all')}
-              className={`px-2.5 py-1 rounded font-semibold text-xs transition-all duration-150 border cursor-pointer ${
+              className={`px-2 py-0.5 rounded font-semibold text-[11px] transition-all duration-150 border cursor-pointer ${
                 activeLegend === 'all'
                   ? 'bg-[#161616] text-white dark:bg-[#f4f4f4] dark:text-[#161616] border-[#161616] dark:border-white shadow-xs'
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
@@ -406,26 +406,26 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             {/* 왼쪽 귀 L 버튼 */}
             <button
               onClick={() => setActiveLegend((prev) => (prev === 'left' ? 'all' : 'left'))}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded font-semibold text-xs transition-all duration-150 border cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-0.5 rounded font-semibold text-[11px] transition-all duration-150 border cursor-pointer ${
                 activeLegend === 'left'
                   ? 'bg-[#edf5ff] dark:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] border-[#0f62fe] shadow-xs'
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0f62fe] inline-block" />
+              <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
               <span>L (왼쪽 귀)</span>
             </button>
 
             {/* 오른쪽 귀 R 버튼 */}
             <button
               onClick={() => setActiveLegend((prev) => (prev === 'right' ? 'all' : 'right'))}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded font-semibold text-xs transition-all duration-150 border cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-0.5 rounded font-semibold text-[11px] transition-all duration-150 border cursor-pointer ${
                 activeLegend === 'right'
                   ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 border-purple-400 shadow-xs'
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
               }`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
+              <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
               <span>R (오른쪽 귀)</span>
             </button>
           </div>
@@ -444,7 +444,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
               strokeDasharray="2 2"
               strokeWidth="1"
             />
-            <text x="6" y={zeroY - 4} fill="currentColor" className="text-[#8d8d8d] text-xs font-mono font-medium" fontSize="11">
+            <text x="6" y={zeroY - 3} fill="currentColor" className="text-[#8d8d8d] text-[10px] font-mono font-medium" fontSize="10">
               0 dB
             </text>
 

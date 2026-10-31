@@ -17,7 +17,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
       {/* 1. 상단 히어로 배너 (IBM Carbon Card) */}
       <div className="p-5 carbon-card rounded-xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-5">
         <div className="space-y-2 text-center sm:text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#edf5ff] dark:bg-[#002d9c]/40 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce]">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#edf5ff] dark:bg-[#002d9c]/40 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce]">
             <Sparkles className="w-3.5 h-3.5 text-[#0f62fe]" />
             <span>양쪽 귀가 똑같이 들리도록 중심을 맞춰드려요</span>
           </div>

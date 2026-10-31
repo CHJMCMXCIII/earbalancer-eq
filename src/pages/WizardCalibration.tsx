@@ -224,15 +224,15 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   return (
     <div className="flex flex-col justify-start items-stretch gap-3.5 w-full">
       {/* 1. 최상단으로 이동한 핵심 내비게이션 & 제어 바 (IBM Carbon Card) */}
-      <div className="p-3 carbon-card rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs sm:text-sm">
+      <div className="p-2.5 carbon-card rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-2.5 text-xs">
         {/* 이전 / 다음 음높이 버튼 & 도트 */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => handleStepChange(currentStepIndex - 1)}
             disabled={currentStepIndex === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] disabled:opacity-30 disabled:pointer-events-none text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs sm:text-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] disabled:opacity-30 disabled:pointer-events-none text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
             <span>이전</span>
           </button>
 
@@ -250,12 +250,12 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                   key={bIdx}
                   onClick={() => handleStepChange(idx)}
                   title={`${FREQUENCY_BANDS[bIdx].label}`}
-                  className={`h-2.5 rounded-full transition-all duration-150 cursor-pointer ${
+                  className={`h-2 rounded-full transition-all duration-150 cursor-pointer ${
                     isCurrent
-                      ? 'w-5 bg-[#0f62fe]'
+                      ? 'w-4 bg-[#0f62fe]'
                       : isDone
-                      ? 'w-2.5 bg-emerald-500'
-                      : 'w-2.5 bg-[#c6c6c6] dark:bg-[#525252] hover:bg-[#8d8d8d]'
+                      ? 'w-2 bg-emerald-500'
+                      : 'w-2 bg-[#c6c6c6] dark:bg-[#525252] hover:bg-[#8d8d8d]'
                   }`}
                 />
               );
@@ -265,26 +265,26 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           {currentStepIndex < activeBandIndices.length - 1 ? (
             <button
               onClick={() => handleStepChange(currentStepIndex + 1)}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded font-semibold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs sm:text-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded font-semibold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
             >
               <span>다음</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           ) : (
             <button
               onClick={onGoToABTest}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded font-bold bg-[#198038] hover:bg-[#0e6027] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs sm:text-sm"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded font-bold bg-[#198038] hover:bg-[#0e6027] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
             >
               <span>비교하기</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
         {/* 10단계 간편 모드 시에만 노출되는 '한 번에 채우기' (토글 좌측에 배치) & 모드 토글 */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {interpNotice && (
-            <span className="text-emerald-700 dark:text-emerald-400 text-xs font-semibold hidden sm:inline">
+            <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold hidden sm:inline">
               {interpNotice}
             </span>
           )}
@@ -294,9 +294,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             <button
               onClick={handleInterpolateAll}
               title="10개 주파수 값을 바탕으로 31개 전체 대역을 보간합니다"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer"
             >
-              <Wand2 className="w-4 h-4 text-[#0f62fe]" />
+              <Wand2 className="w-3.5 h-3.5 text-[#0f62fe]" />
               <span>한 번에 채우기</span>
             </button>
           )}
@@ -308,7 +308,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 setMode('10-band');
                 setCurrentStepIndex(0);
               }}
-              className={`px-3 py-1 rounded font-semibold transition-all duration-150 text-xs sm:text-sm cursor-pointer ${
+              className={`px-2.5 py-1 rounded font-semibold transition-all duration-150 text-xs cursor-pointer ${
                 mode === '10-band'
                   ? 'bg-white dark:bg-[#262626] text-[#0f62fe] dark:text-[#0f62fe] shadow-xs'
                   : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
@@ -321,7 +321,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 setMode('31-band');
                 setCurrentStepIndex(0);
               }}
-              className={`px-3 py-1 rounded font-semibold transition-all duration-150 text-xs sm:text-sm cursor-pointer ${
+              className={`px-2.5 py-1 rounded font-semibold transition-all duration-150 text-xs cursor-pointer ${
                 mode === '31-band'
                   ? 'bg-white dark:bg-[#262626] text-[#0f62fe] dark:text-[#0f62fe] shadow-xs'
                   : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
@@ -381,18 +381,18 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           </div>
 
           {/* 왼쪽 귀 (Left Channel) 채널 분리 슬라이더 (0.1 dB 단위 고정) */}
-          <div className="p-3.5 carbon-subcard rounded-lg space-y-2">
-            <div className="flex justify-between items-center text-xs sm:text-sm font-semibold">
-              <span className="text-[#161616] dark:text-[#f4f4f4] flex items-center gap-2 font-bold">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#0f62fe] inline-block" />
+          <div className="p-3 carbon-subcard rounded-lg space-y-1.5">
+            <div className="flex justify-between items-center text-xs font-semibold">
+              <span className="text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 font-bold">
+                <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
                 <span>왼쪽 귀 (Channel: L) 소리 크기 보정</span>
               </span>
-              <span className="font-mono text-[#0f62fe] dark:text-[#78a9ff] text-sm font-bold">
+              <span className="font-mono text-[#0f62fe] dark:text-[#78a9ff] text-xs sm:text-sm font-bold">
                 {currentBandCalib.leftDb > 0 ? `+${currentBandCalib.leftDb.toFixed(1)}` : currentBandCalib.leftDb.toFixed(1)} dB
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-mono">-12.0 dB</span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] font-mono">-12.0 dB</span>
               <input
                 type="range"
                 min="-12.0"
@@ -400,25 +400,25 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 step="0.1"
                 value={currentBandCalib.leftDb}
                 onChange={(e) => handleUpdateLeft(parseFloat(e.target.value))}
-                className="w-full h-2.5 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe]"
+                className="w-full h-2 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe]"
               />
-              <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-mono">+12.0 dB</span>
+              <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] font-mono">+12.0 dB</span>
             </div>
           </div>
 
           {/* 오른쪽 귀 (Right Channel) 채널 분리 슬라이더 (0.1 dB 단위 고정) */}
-          <div className="p-3.5 carbon-subcard rounded-lg space-y-2">
-            <div className="flex justify-between items-center text-xs sm:text-sm font-semibold">
-              <span className="text-[#161616] dark:text-[#f4f4f4] flex items-center gap-2 font-bold">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#0f62fe] inline-block" />
+          <div className="p-3 carbon-subcard rounded-lg space-y-1.5">
+            <div className="flex justify-between items-center text-xs font-semibold">
+              <span className="text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 font-bold">
+                <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
                 <span>오른쪽 귀 (Channel: R) 소리 크기 보정</span>
               </span>
-              <span className="font-mono text-[#0f62fe] dark:text-[#78a9ff] text-sm font-bold">
+              <span className="font-mono text-[#0f62fe] dark:text-[#78a9ff] text-xs sm:text-sm font-bold">
                 {currentBandCalib.rightDb > 0 ? `+${currentBandCalib.rightDb.toFixed(1)}` : currentBandCalib.rightDb.toFixed(1)} dB
               </span>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-mono">-12.0 dB</span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] font-mono">-12.0 dB</span>
               <input
                 type="range"
                 min="-12.0"
@@ -426,87 +426,87 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 step="0.1"
                 value={currentBandCalib.rightDb}
                 onChange={(e) => handleUpdateRight(parseFloat(e.target.value))}
-                className="w-full h-2.5 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe]"
+                className="w-full h-2 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe]"
               />
-              <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-mono">+12.0 dB</span>
+              <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] font-mono">+12.0 dB</span>
             </div>
           </div>
 
           {/* ISO 226 표준 전체 음량 자동 연동 상태 (i 아이콘 툴팁 추가) */}
-          <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between text-xs sm:text-sm">
-            <div className="flex items-center gap-2.5">
-              <Lock className="w-4 h-4 text-[#525252] dark:text-[#8d8d8d] flex-shrink-0" />
+          <div className="p-2.5 carbon-subcard rounded-lg flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Lock className="w-3.5 h-3.5 text-[#525252] dark:text-[#8d8d8d] flex-shrink-0" />
               <div>
-                <div className="font-semibold text-[#161616] dark:text-[#f4f4f4] text-xs sm:text-sm flex items-center gap-1.5">
+                <div className="font-semibold text-[#161616] dark:text-[#f4f4f4] text-xs flex items-center gap-1.5">
                   <span>ISO 226 표준 전체 음량 자동 연동 (Default)</span>
                   <div className="relative group/tip inline-flex items-center">
                     <Info className="w-3.5 h-3.5 text-[#0f62fe] cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-xs rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
                       <strong>ISO 226 등청감 곡선 표준이란?</strong><br />
                       사람 귀는 낮은 저음과 높은 고음을 상대적으로 작게 듣습니다. 어떤 음높이를 선택해도 귀에 부담 없이 편안하고 똑같은 크기로 들리도록 시스템이 자동 보정해줍니다.
                       <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
                     </div>
                   </div>
                 </div>
-                <div className="text-xs text-[#525252] dark:text-[#8d8d8d] mt-0.5">
+                <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d] mt-0.5">
                   인간 청각 특성에 맞춰 시스템이 자동 보정 (임의 변경 잠금)
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] px-2.5 py-1 rounded font-mono text-xs font-bold text-[#161616] dark:text-[#f4f4f4] flex-shrink-0 shadow-xs">
+            <div className="bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] px-2 py-0.5 rounded font-mono text-[11px] font-bold text-[#161616] dark:text-[#f4f4f4] flex-shrink-0 shadow-xs">
               +{currentBandInfo.isoCompDb.toFixed(1)} dB 보정됨
             </div>
           </div>
 
           {/* 보조 기능 1: 좌우 채널 반전 (Swap L/R) (i 아이콘 툴팁 추가) */}
-          <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between gap-3 text-xs sm:text-sm">
+          <div className="p-2.5 carbon-subcard rounded-lg flex items-center justify-between gap-2.5 text-xs">
             <div className="space-y-0.5">
-              <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
-                <ArrowLeftRight className="w-4 h-4 text-[#0f62fe]" />
+              <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs">
+                <ArrowLeftRight className="w-3.5 h-3.5 text-[#0f62fe]" />
                 <span>좌/우 채널 반전 (Swap L/R)</span>
                 <div className="relative group/tip inline-flex items-center">
                   <Info className="w-3.5 h-3.5 text-[#0f62fe] cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-xs rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
                     <strong>좌우 채널 반전이란?</strong><br />
                     이어폰을 반대로 착용했는지 점검하거나, 양쪽 귀의 감도 균형을 서로 맞바꾸어 역비교해보고 싶을 때 버튼 하나로 왼쪽과 오른쪽 수치를 즉시 교체합니다.
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-[#525252] dark:text-[#8d8d8d]">
+              <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
                 헤드폰 착용 상태를 점검하거나 양쪽 밸런스를 반대로 비교해볼 때 좌우 값을 맞바꿉니다
               </div>
             </div>
             <button
               onClick={handleSwapChannels}
-              className="flex-shrink-0 px-3.5 py-2 rounded text-xs font-semibold bg-white hover:bg-[#e8e8e8] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer shadow-xs"
+              className="flex-shrink-0 px-3 py-1.5 rounded text-xs font-semibold bg-white hover:bg-[#e8e8e8] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer shadow-xs"
             >
               채널 맞바꾸기
             </button>
           </div>
 
           {/* 보조 기능 2: 위상(Phase) 180° 반전 (i 아이콘 툴팁 추가 & 고정 너비) */}
-          <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between gap-3 text-xs sm:text-sm">
+          <div className="p-2.5 carbon-subcard rounded-lg flex items-center justify-between gap-2.5 text-xs">
             <div className="space-y-0.5">
-              <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
-                <Activity className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs">
+                <Activity className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                 <span>소리가 머리 밖으로 흩어질 때: 위상(Phase) 반전</span>
                 <div className="relative group/tip inline-flex items-center">
                   <Info className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-xs rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
                     <strong>위상(Phase) 180° 반전이란?</strong><br />
                     소리가 머리 정중앙에 맺히지 않고 귀 바깥으로 흩어지거나 귓속이 텅 빈 것처럼 멍멍할 때 켜보세요. 180도 위상을 뒤집어 소리를 정중앙으로 모아줍니다.
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-[#525252] dark:text-[#8d8d8d]">
+              <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
                 소리가 중심에 맺히지 않고 귓속이 텅 빈 것처럼 흩어질 때 켜면 180도 위상을 뒤집어 소리를 모아줍니다
               </div>
             </div>
             <button
               onClick={handleTogglePhase}
-              className={`flex-shrink-0 w-36 min-w-[144px] text-center px-3 py-2 rounded text-xs font-semibold border transition-all duration-150 cursor-pointer shadow-xs ${
+              className={`flex-shrink-0 w-36 min-w-[144px] text-center px-3 py-1.5 rounded text-xs font-semibold border transition-all duration-150 cursor-pointer shadow-xs ${
                 currentBandCalib.phaseInvert
                   ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 font-bold'
                   : 'bg-white hover:bg-[#e8e8e8] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border-[#e0e0e0] dark:border-[#525252]'

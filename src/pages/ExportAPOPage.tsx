@@ -36,11 +36,25 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   onBackToABTest,
 }) => {
   const [profileName, setProfileName] = useState<string>('내 헤드폰');
-  const [preampDb, setPreampDb] = useState<number>(-3.0);
+
+  // 소리 맞춤 단계에서 가장 크게 증가한 주파수의 gain 값 (+1 만큼 -dB 반영)
+  const maxBoost = Math.max(
+    0,
+    ...calibrations.map((c) => Math.max(c.leftDb || 0, c.rightDb || 0))
+  );
+  // 권장 Preamp: 최대 부스트 + 1 dB를 감쇄하는 음수 값 (- (maxBoost + 1))
+  const suggestedPreamp = -parseFloat((maxBoost + 1.0).toFixed(1));
+
+  const [preampDb, setPreampDb] = useState<number>(() => suggestedPreamp);
   const [profiles, setProfiles] = useState<Profile[]>(() => loadSavedProfiles());
   const [copied, setCopied] = useState<boolean>(false);
   const [autoApplied, setAutoApplied] = useState<boolean>(false);
   const [showGuideModal, setShowGuideModal] = useState<boolean>(false);
+
+  // 캘리브레이션 값 변경 시 프리앰프 자동 동기화
+  React.useEffect(() => {
+    setPreampDb(suggestedPreamp);
+  }, [suggestedPreamp]);
 
   const bandExportList = FREQUENCY_BANDS.map((b, i) => ({
     freq: b.freq,
@@ -147,31 +161,31 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   return (
     <div className="flex flex-col justify-start items-stretch gap-3.5 w-full">
       {/* 1. 최상단 내비게이션 바 (IBM Carbon Card) */}
-      <div className="flex items-center justify-between p-3 carbon-card rounded-xl shadow-xs text-sm">
+      <div className="flex items-center justify-between p-2.5 carbon-card rounded-xl shadow-xs text-xs">
         <button
           onClick={onBackToABTest}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs sm:text-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>이전 (A/B 테스트로)</span>
         </button>
 
-        <span className="text-xs sm:text-sm text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
+        <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
           모든 캘리브레이션이 완료되었습니다. Equalizer APO에 저장하세요!
         </span>
 
-        <span className="text-[#8d8d8d] text-xs sm:text-sm font-medium">Equalizer APO 규격</span>
+        <span className="text-[#8d8d8d] text-[11px] font-medium">Equalizer APO 규격</span>
       </div>
 
       {/* 2. 네비게이션 아래로 이동한 [Equalizer APO 앱 가이드 & 설치 지원 카드] */}
-      <div className="p-3.5 carbon-card rounded-xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-        <div className="flex items-center gap-3">
-          <FileText className="w-5 h-5 text-[#0f62fe] flex-shrink-0" />
+      <div className="p-3 carbon-card rounded-xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2.5">
+          <FileText className="w-4 h-4 text-[#0f62fe] flex-shrink-0" />
           <div>
-            <div className="font-bold text-[#161616] dark:text-[#f4f4f4] text-sm">
+            <div className="font-bold text-[#161616] dark:text-[#f4f4f4] text-xs sm:text-sm">
               Equalizer APO 연동 및 설치 지원
             </div>
-            <div className="text-xs text-[#525252] dark:text-[#c6c6c6] mt-0.5">
+            <div className="text-[11px] text-[#525252] dark:text-[#c6c6c6] mt-0.5">
               설정 파일을 윈도우에 적용하는 방법을 확인하거나, 아직 프로그램이 없다면 무료로 내려받으세요.
             </div>
           </div>
@@ -181,9 +195,9 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => setShowGuideModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
           >
-            <BookOpen className="w-4 h-4 text-[#0f62fe]" />
+            <BookOpen className="w-3.5 h-3.5 text-[#0f62fe]" />
             <span>설정 가이드 보기</span>
           </button>
 
@@ -191,16 +205,16 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             href="https://sourceforge.net/projects/equalizerapo/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#edf5ff] dark:bg-[#002d9c]/40 hover:bg-[#d0e2ff] dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded font-semibold border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs text-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#edf5ff] dark:bg-[#002d9c]/40 hover:bg-[#d0e2ff] dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded font-semibold border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs text-xs"
           >
             <span>Equalizer APO 앱 설치</span>
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
       </div>
 
       {autoApplied && (
-        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-600/60 rounded-xl text-emerald-800 dark:text-emerald-200 text-xs sm:text-sm font-semibold flex items-center gap-2.5 shadow-xs">
+        <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-600/60 rounded-xl text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2 shadow-xs">
           <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <span>Equalizer APO 설정 파일이 저장되었습니다. 시스템 사운드에 즉시 반영됩니다!</span>
         </div>
@@ -213,7 +227,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           {/* 프로필 이름 및 Preamp 안전 설정 */}
           <div className="grid grid-cols-2 gap-3.5 pb-3 border-b border-[#e0e0e0] dark:border-[#393939]">
             <div>
-              <label className="block text-xs font-semibold text-[#525252] dark:text-[#c6c6c6] mb-1.5">
+              <label className="block text-[11px] font-semibold text-[#525252] dark:text-[#c6c6c6] mb-1">
                 기기 프로필명
               </label>
               <div className="flex gap-1.5">
@@ -221,52 +235,66 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                   type="text"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
-                  className="w-full carbon-subcard rounded px-3 py-1.5 text-xs sm:text-sm text-[#161616] dark:text-[#f4f4f4] font-medium focus:outline-none focus:border-[#0f62fe]"
+                  className="w-full carbon-subcard rounded px-2.5 py-1 text-xs text-[#161616] dark:text-[#f4f4f4] font-medium focus:outline-none focus:border-[#0f62fe]"
                 />
                 <button
                   onClick={handleSaveToProfileList}
                   title="현재 보정값을 이 이름으로 저장"
-                  className="px-3 py-1.5 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center cursor-pointer shadow-xs"
+                  className="px-2.5 py-1 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center cursor-pointer shadow-xs"
                 >
-                  <Save className="w-4 h-4 text-[#0f62fe]" />
+                  <Save className="w-3.5 h-3.5 text-[#0f62fe]" />
                 </button>
               </div>
             </div>
 
             <div>
-              <div className="flex justify-between text-xs font-semibold text-[#525252] dark:text-[#c6c6c6] mb-1.5">
-                <span>클리핑 방지 Preamp</span>
-                <span className="font-mono text-[#161616] dark:text-[#f4f4f4] font-bold text-xs sm:text-sm">{preampDb.toFixed(1)} dB</span>
+              <div className="flex justify-between items-center text-[11px] font-semibold text-[#525252] dark:text-[#c6c6c6] mb-1">
+                <div className="flex items-center gap-1.5">
+                  <span>클리핑 방지 Preamp</span>
+                  <button
+                    onClick={() => setPreampDb(suggestedPreamp)}
+                    title={`최대 증폭(+${maxBoost.toFixed(1)}dB) + 1dB 자동 계산값(${suggestedPreamp.toFixed(1)}dB)으로 재설정`}
+                    className="px-1.5 py-0.2 rounded text-[10px] bg-[#edf5ff] dark:bg-[#002d9c]/40 text-[#0f62fe] dark:text-[#78a9ff] hover:underline font-semibold cursor-pointer border border-[#d0e2ff] dark:border-[#0043ce]"
+                  >
+                    자동({suggestedPreamp.toFixed(1)}dB)
+                  </button>
+                </div>
+                <span className="font-mono text-[#161616] dark:text-[#f4f4f4] font-bold text-xs">{preampDb.toFixed(1)} dB</span>
               </div>
               <input
                 type="range"
-                min="-12.0"
+                min="-16.0"
                 max="0.0"
-                step="0.5"
+                step="0.1"
                 value={preampDb}
                 onChange={(e) => setPreampDb(parseFloat(e.target.value))}
-                className="w-full h-2 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe] mt-2"
+                className="w-full h-1.5 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe] mt-1.5"
               />
+              <div className="flex justify-between text-[10px] text-[#8d8d8d] font-mono mt-0.5">
+                <span>-16.0 dB</span>
+                <span>최대 증폭 +{maxBoost.toFixed(1)}dB 반영</span>
+                <span>0.0 dB</span>
+              </div>
             </div>
           </div>
 
           {/* 이원화 옵션 카드: 옵션 1 (자동 반영) vs 옵션 2 (다운로드) */}
           <div className="space-y-3 my-auto">
             {/* 옵션 1: 자동 반영하기 */}
-            <div className="p-3.5 carbon-subcard rounded-lg flex items-center justify-between gap-3">
-              <div className="space-y-1">
+            <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
                 <div className="text-xs sm:text-sm font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5">
                   <Zap className="w-4 h-4 text-amber-500" />
                   <span>옵션 1: Equalizer APO에 자동 반영하기 (권장)</span>
                 </div>
-                <div className="text-xs text-[#525252] dark:text-[#8d8d8d]">
+                <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
                   APO config.txt로 바로 저장하여 재부팅 없이 실시간 적용
                 </div>
               </div>
 
               <button
                 onClick={handleAutoApplyToAPO}
-                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded font-bold text-xs bg-[#198038] hover:bg-[#0e6027] text-white shadow-xs transition-all duration-150 cursor-pointer"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded font-bold text-xs bg-[#198038] hover:bg-[#0e6027] text-white shadow-xs transition-all duration-150 cursor-pointer"
               >
                 <Zap className="w-3.5 h-3.5" />
                 <span>자동 반영 적용</span>
@@ -274,20 +302,20 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
 
             {/* 옵션 2: 파일 다운로드하기 */}
-            <div className="p-3.5 carbon-subcard rounded-lg flex items-center justify-between gap-3">
-              <div className="space-y-1">
+            <div className="p-3 carbon-subcard rounded-lg flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
                 <div className="text-xs sm:text-sm font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5">
                   <Download className="w-4 h-4 text-[#0f62fe]" />
                   <span>옵션 2: 설정 파일 (.txt) 직접 다운로드</span>
                 </div>
-                <div className="text-xs text-[#525252] dark:text-[#8d8d8d]">
+                <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
                   수동 보관 또는 다른 PC용 설정 파일 저장
                 </div>
               </div>
 
               <button
                 onClick={handleDownloadBackup}
-                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded font-semibold text-xs bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer shadow-xs"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded font-semibold text-xs bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer shadow-xs"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>파일 다운로드</span>
@@ -297,12 +325,12 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
 
           {/* 클립보드 복사 바 */}
           <div className="flex items-center justify-between pt-2 border-t border-[#e0e0e0] dark:border-[#393939] text-xs">
-            <span className="text-xs text-[#525252] dark:text-[#8d8d8d]">
+            <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
               Equalizer APO 규격: GraphicEQ (Channel: L / R 개별 분리)
             </span>
             <button
               onClick={handleCopyClipboard}
-              className="flex items-center gap-1 text-xs text-[#0f62fe] dark:text-[#78a9ff] hover:underline cursor-pointer font-medium"
+              className="flex items-center gap-1 text-[11px] text-[#0f62fe] dark:text-[#78a9ff] hover:underline cursor-pointer font-medium"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? '복사됨!' : '전체 문법 클립보드 복사'}</span>
@@ -313,19 +341,19 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
         {/* 우측 5컬럼: 프로필 목록 & GraphicEQ 실시간 미리보기 (h-full & justify-between) */}
         <div className="md:col-span-5 h-full flex flex-col justify-between gap-3.5 w-full">
           {/* 내 프로필 목록 */}
-          <div className="p-3.5 carbon-card rounded-xl shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-xs sm:text-sm font-semibold text-[#161616] dark:text-[#f4f4f4]">
+          <div className="p-3 carbon-card rounded-xl shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#161616] dark:text-[#f4f4f4]">
               <span>내 저장 프로필 ({profiles.length})</span>
             </div>
             <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
               {profiles.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between p-2 carbon-subcard rounded text-xs"
+                  className="flex items-center justify-between p-1.5 carbon-subcard rounded text-xs"
                 >
                   <span
                     onClick={() => handleLoadProfile(p)}
-                    className="cursor-pointer text-[#161616] dark:text-[#f4f4f4] hover:text-[#0f62fe] truncate flex-1 font-medium"
+                    className="cursor-pointer text-[#161616] dark:text-[#f4f4f4] hover:text-[#0f62fe] truncate flex-1 font-medium text-xs"
                   >
                     {p.name}
                   </span>
@@ -340,12 +368,12 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
           </div>
 
-          {/* GraphicEQ 미리보기 (flex-1로 채워짐, 12px 폰트) */}
-          <div className="p-3.5 carbon-subcard rounded-xl font-mono text-xs text-[#525252] dark:text-[#c6c6c6] flex-1 flex flex-col justify-between shadow-xs">
-            <div className="text-[#161616] dark:text-[#f4f4f4] pb-1.5 border-b border-[#e0e0e0] dark:border-[#393939] font-bold text-xs">
+          {/* GraphicEQ 미리보기 (flex-1로 채워짐, 11px 폰트) */}
+          <div className="p-3 carbon-subcard rounded-xl font-mono text-xs text-[#525252] dark:text-[#c6c6c6] flex-1 flex flex-col justify-between shadow-xs">
+            <div className="text-[#161616] dark:text-[#f4f4f4] pb-1 border-b border-[#e0e0e0] dark:border-[#393939] font-bold text-xs">
               Equalizer APO GraphicEQ 문법 미리보기
             </div>
-            <pre className="max-h-36 overflow-y-auto whitespace-pre-wrap leading-tight my-auto text-[#161616] dark:text-[#f4f4f4] text-xs">
+            <pre className="max-h-36 overflow-y-auto whitespace-pre-wrap leading-tight my-auto text-[#161616] dark:text-[#f4f4f4] text-[11px]">
               {apoConfigText}
             </pre>
           </div>
