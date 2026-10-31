@@ -100,7 +100,7 @@
   * 상하로 벌어지지 않는 상단 밀착형(Top-Aligned) 레이아웃 (`justify-start`)
   * 좌우 카드가 높이를 맞추고 내부 요소가 상하로 퍼지도록 `items-stretch` 및 `justify-between` 적용
 * **푸터**:
-  * `chjmcmxciii` 텍스트 단독 표시 (링크 없음)
+  * `EarBalancer EQ • chjmcmxciii • Windows 환경에서만 사용 가능합니다 (Equalizer APO 전용)` 명시 (링크 없음)
 
 ---
 
@@ -130,3 +130,10 @@
 22. [x] Phase 22: IBM Carbon Motion 기반 타임라인 재생바 트랜지션 및 마우스 드래그 즉시 반응
 23. [x] Phase 23: Equalizer APO 가이드 팝업 dim 배경 클릭 닫기 지원
 24. [x] Phase 24: IBM Carbon Design System 전면 도입 (IBM Plex Sans KR 폰트, 색상, 모션, 순수 CSS 토큰 기반 라이트/다크 모드 완벽 동기화)
+25. [x] Phase 25:
+    * **유용한 팁 i 아이콘 툴팁 이동**: 가이드 페이지의 팁 섹션을 소리 맞춤 화면의 ISO 226, 좌우 반전, 위상 반전 항목 옆 `i` 툴팁으로 마우스 오버 시 노출되도록 이동.
+    * **두상 그래픽 정면 간접 화살표**: '▲ 정면' 텍스트/특수문자 제거 후 우아한 미니멀 상향 셰브론(`^`) 화살표 그래픽으로 정면 방향 표시.
+    * **전/후 비교 Option B 라이트 모드 가독성 완벽 개선**: 비활성 상태에서 밝은 하늘색/연초록 텍스트를 고대비 텍스트(`text-[#161616]`, `text-[#0f62fe]`, `text-[#198038]`)로 수정.
+    * **APO 자동 반영 취소 핸들링**: 파일 탐색기 저장 창에서 '취소' 클릭 시 중복 다운로드 창이 뜨지 않도록 `AbortError` 처리 완료.
+    * **전체 앱 최소 텍스트 12px(`text-xs`) 스케일링**: 10px, 11px 제거 및 전체 폰트 크기 비례 확대.
+    * **푸터 Windows 전용 표기**: 레이아웃 최하단에 `Windows 환경에서만 사용 가능합니다 (Equalizer APO 전용)` 명시.

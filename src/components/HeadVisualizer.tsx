@@ -28,26 +28,26 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
   return (
     <div className="relative flex flex-col items-center justify-between p-4 carbon-card rounded-xl shadow-xs overflow-hidden h-full">
-      {/* 상단 밸런스 상태 텍스트 */}
-      <div className="w-full flex items-center justify-between text-xs text-[#525252] dark:text-[#c6c6c6] z-10 pb-1">
+      {/* 상단 밸런스 상태 텍스트 (최소 12px) */}
+      <div className="w-full flex items-center justify-between text-xs sm:text-sm text-[#525252] dark:text-[#c6c6c6] z-10 pb-1.5">
         <div className="flex items-center gap-1.5 font-medium">
-          <Radio className="w-3.5 h-3.5 text-[#0f62fe]" />
-          <span className="font-semibold text-[11px] text-[#161616] dark:text-[#f4f4f4]">
+          <Radio className="w-4 h-4 text-[#0f62fe]" />
+          <span className="font-semibold text-xs sm:text-sm text-[#161616] dark:text-[#f4f4f4]">
             중심 음파 방사 가이드
           </span>
         </div>
 
         <div>
           {isBalanced ? (
-            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 text-[11px]">
-              <CheckCircle2 className="w-3 h-3" /> 양쪽 귀 균형 일치
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-3 py-1 rounded border border-emerald-300 dark:border-emerald-800 text-xs">
+              <CheckCircle2 className="w-3.5 h-3.5" /> 양쪽 귀 균형 일치
             </span>
           ) : diffDb < 0 ? (
-            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939] text-[11px]">
+            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2.5 py-1 rounded border border-[#e0e0e0] dark:border-[#393939] text-xs">
               왼쪽이 <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{Math.abs(diffDb).toFixed(1)} dB</strong> 더 큼
             </span>
           ) : (
-            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939] text-[11px]">
+            <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2.5 py-1 rounded border border-[#e0e0e0] dark:border-[#393939] text-xs">
               오른쪽이 <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{diffDb.toFixed(1)} dB</strong> 더 큼
             </span>
           )}
@@ -165,8 +165,22 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             />
           </g>
 
-          {/* 4. 미니멀한 두상 (상하 길이가 시각적으로 안정감 있게 연장됨: ry=54) */}
+          {/* 4. 미니멀한 두상 */}
           <g transform="translate(160, 105)">
+            {/* 정면 방향을 가리키는 간접 화살표 그래픽 (텍스트 및 특수문자 제거 완료) */}
+            <g transform="translate(0, -68)">
+              <path
+                d="M -4 4 L 0 -2 L 4 4"
+                fill="none"
+                stroke="currentColor"
+                className="text-[#0f62fe] dark:text-[#78a9ff]"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="0" cy="-6" r="1.2" fill="currentColor" className="text-[#0f62fe] dark:text-[#78a9ff]" />
+            </g>
+
             {/* 코 (위쪽 시선) */}
             <path
               d="M -5 -54 Q 0 -68 5 -54 Z"
@@ -174,7 +188,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               strokeWidth="1.2"
               strokeLinejoin="round"
             />
-            {/* 두상 외곽선 (상하 길이를 43에서 54로 늘려 훨씬 우아하고 비례감 있는 타원 형성) */}
+            {/* 두상 외곽선 */}
             <ellipse
               cx="0"
               cy="0"
@@ -184,7 +198,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               strokeWidth="1.2"
             />
 
-            {/* 좌측 귀 (L) - 연장된 두상 높이에 맞춰 귀 크기 최적화 */}
+            {/* 좌측 귀 (L) */}
             <rect
               x="-55"
               y="-14"
@@ -198,7 +212,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               x="-68"
               y="4"
               className="fill-[#161616] dark:text-[#f4f4f4] font-bold"
-              fontSize="10"
+              fontSize="11"
               textAnchor="middle"
             >
               L
@@ -218,7 +232,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               x="68"
               y="4"
               className="fill-[#161616] dark:text-[#f4f4f4] font-bold"
-              fontSize="10"
+              fontSize="11"
               textAnchor="middle"
             >
               R
@@ -236,7 +250,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               strokeDasharray="2 2"
             />
 
-            {/* 머리 중심 발원 코어 (명확한 고대비 색상) */}
+            {/* 머리 중심 발원 코어 */}
             <circle
               cx="0"
               cy="0"
@@ -246,40 +260,29 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               className={isPlaying ? 'animate-pulse' : ''}
             />
             <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
-
-            <text
-              x="0"
-              y="-20"
-              className="fill-[#525252] dark:fill-[#c6c6c6] font-medium"
-              fontSize="8"
-              textAnchor="middle"
-              letterSpacing="0.5"
-            >
-              ▲ 정면
-            </text>
           </g>
         </svg>
 
         {phaseInvert && (
-          <div className="absolute bottom-0 bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-200 border border-purple-300 dark:border-purple-600 text-[10px] font-medium px-2 py-0.5 rounded-full shadow-xs">
+          <div className="absolute bottom-0 bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-200 border border-purple-300 dark:border-purple-600 text-xs font-semibold px-2.5 py-1 rounded-full shadow-xs">
             180° 위상 반전 적용됨
           </div>
         )}
       </div>
 
-      {/* 하단 주파수 대역 표시 박스 */}
-      <div className="w-full mt-2 pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex items-center justify-between text-xs z-10">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">현재 대역:</span>
-          <span className="font-mono font-bold text-sm text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939]">
+      {/* 하단 주파수 대역 표시 박스 (최소 12px) */}
+      <div className="w-full mt-2 pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex flex-col items-center justify-between text-xs sm:text-sm z-10">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[#525252] dark:text-[#8d8d8d]">현재 대역:</span>
+          <span className="font-mono font-bold text-sm text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2.5 py-1 rounded border border-[#e0e0e0] dark:border-[#393939]">
             {currentBand.label}
           </span>
-          <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
+          <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
             ({currentBand.freq} Hz)
           </span>
         </div>
 
-        <div className="text-[11px] text-[#525252] dark:text-[#c6c6c6] truncate max-w-[170px] text-right font-medium">
+        <div className="mt-2 text-xs xs:text-xs text-[#525252] dark:text-[#c6c6c6] text-center font-small">
           {currentBand.description}
         </div>
       </div>

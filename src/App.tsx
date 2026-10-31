@@ -60,7 +60,7 @@ export function App() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col justify-start select-none font-sans transition-colors duration-150 ${
+      className={`min-h-screen flex flex-col justify-start select-none transition-colors duration-150 ${
         isDarkMode
           ? 'dark acoustic-pattern-dark text-[#f4f4f4]'
           : 'acoustic-pattern-light text-[#161616]'
@@ -79,7 +79,7 @@ export function App() {
                 <h1 className="font-bold text-sm tracking-tight text-[#161616] dark:text-[#f4f4f4]">
                   EarBalancer EQ
                 </h1>
-                <span className="px-1.5 py-0.5 text-[9px] bg-[#f4f4f4] dark:bg-[#393939] text-[#161616] dark:text-[#f4f4f4] rounded font-semibold border border-[#e0e0e0] dark:border-[#525252]">
+                <span className="px-2 py-0.5 text-xs bg-[#f4f4f4] dark:bg-[#393939] text-[#161616] dark:text-[#f4f4f4] rounded font-semibold border border-[#e0e0e0] dark:border-[#525252]">
                   양쪽 청각 보정
                 </span>
               </div>
@@ -140,7 +140,7 @@ export function App() {
           {/* 우측 볼륨 & 좌우 스위치 토글 방식의 라이트/다크 모드 */}
           <div className="flex items-center gap-2.5">
             {/* 좌우 스위치 토글 버튼 (Sliding Pill Switch Toggle) */}
-            <div className="flex items-center p-0.5 bg-[#e0e0e0] dark:bg-[#393939] rounded-full border border-[#d0d0d0] dark:border-[#525252] relative text-[11px] font-semibold select-none shadow-xs">
+            <div className="flex items-center p-0.5 bg-[#e0e0e0] dark:bg-[#393939] rounded-full border border-[#d0d0d0] dark:border-[#525252] relative text-xs font-semibold select-none shadow-xs">
               <button
                 onClick={() => setIsDarkMode(false)}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full transition-all duration-150 cursor-pointer ${
@@ -150,7 +150,7 @@ export function App() {
                 }`}
                 title="밝고 선명한 라이트 모드"
               >
-                <Sun className="w-3 h-3 text-amber-500" />
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
                 <span>라이트</span>
               </button>
 
@@ -163,7 +163,7 @@ export function App() {
                 }`}
                 title="눈이 편안한 다크 모드"
               >
-                <Moon className="w-3 h-3 text-[#c6c6c6]" />
+                <Moon className="w-3.5 h-3.5 text-[#c6c6c6]" />
                 <span>다크</span>
               </button>
             </div>
@@ -181,7 +181,7 @@ export function App() {
                 className="w-16 h-1.5 bg-[#d0d0d0] dark:bg-[#393939] rounded appearance-none cursor-pointer accent-[#0f62fe]"
                 title="앱 마스터 볼륨"
               />
-              <span className="font-mono text-[10px] text-[#161616] dark:text-[#f4f4f4] w-6 font-semibold">
+              <span className="font-mono text-xs text-[#161616] dark:text-[#f4f4f4] w-7 font-semibold">
                 {Math.round(masterVolume * 100)}%
               </span>
             </div>
@@ -226,9 +226,15 @@ export function App() {
         )}
       </main>
 
-      {/* 3. 하단 푸터 (IBM Carbon 미니멀 스타일, chjmcmxciii 단독 표기, 링크 x) */}
-      <footer className="flex-shrink-0 bg-white/80 dark:bg-[#161616]/80 backdrop-blur-xs border-t border-[#e0e0e0] dark:border-[#393939] py-2 px-4 text-center text-[11px] text-[#525252] dark:text-[#8d8d8d] font-medium transition-colors duration-150">
-        <p>EarBalancer EQ • chjmcmxciii</p>
+      {/* 3. 하단 푸터 (IBM Carbon 미니멀 스타일, chjmcmxciii 단독 표기, 링크 x, Windows 환경 전용 명시) */}
+      <footer className="flex-shrink-0 bg-white/80 dark:bg-[#161616]/80 backdrop-blur-xs border-t border-[#e0e0e0] dark:border-[#393939] py-2.5 px-4 text-center text-xs text-[#525252] dark:text-[#8d8d8d] font-medium transition-colors duration-150">
+        <p className="flex items-center justify-center gap-2 flex-wrap">
+          <span>EarBalancer EQ</span>
+          <span>•</span>
+          <span>chjmcmxciii</span>
+          <span>•</span>
+          <span className="text-[#0f62fe] dark:text-[#78a9ff] font-semibold">Windows 환경에서만 사용 가능합니다 (Equalizer APO 전용)</span>
+        </p>
       </footer>
     </div>
   );

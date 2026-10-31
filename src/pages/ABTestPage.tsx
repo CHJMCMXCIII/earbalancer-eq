@@ -209,7 +209,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
           <span>다시 세부 조절하기</span>
         </button>
 
-        <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
+        <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
           🎧 양쪽 귀 감도 보정 전/후 소리를 실시간으로 비교해보세요
         </span>
 
@@ -236,7 +236,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             </div>
 
             <label className="cursor-pointer px-2.5 py-1.5 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-medium border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center gap-1 shadow-xs">
-              <Upload className="w-3 h-3 text-[#0f62fe]" />
+              <Upload className="w-3.5 h-3.5 text-[#0f62fe]" />
               <span>내 음악 열기</span>
               <input
                 type="file"
@@ -249,7 +249,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
 
           {/* 우측: 재생 / 일시정지 / 정지 버튼 및 시간 표시 */}
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[11px] text-[#525252] dark:text-[#8d8d8d]">
+            <span className="font-mono text-xs text-[#525252] dark:text-[#8d8d8d]">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
@@ -315,7 +315,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
           {/* 마우스 올렸을 때 나타나는 툴팁 (현재 가리키는 초 표시) */}
           {hoverTime !== null && (
             <div
-              className="absolute -top-7 -translate-x-1/2 bg-[#161616] text-[#f4f4f4] dark:bg-[#f4f4f4] dark:text-[#161616] text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shadow pointer-events-none z-20"
+              className="absolute -top-7 -translate-x-1/2 bg-[#161616] text-[#f4f4f4] dark:bg-[#f4f4f4] dark:text-[#161616] text-xs font-mono font-bold px-2 py-0.5 rounded shadow pointer-events-none z-20"
               style={{ left: `${hoverX}px` }}
             >
               {formatTime(hoverTime)}
@@ -336,26 +336,46 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
                 : 'carbon-subcard hover:border-[#8d8d8d]'
             }`}
           >
-            <span className="text-[10px] tracking-wider uppercase opacity-70">Option A</span>
-            <span className="text-base font-bold mt-0.5">보정 전 (원본 소리)</span>
-            <span className="text-[11px] opacity-75 mt-0.5">양쪽 귀 불균형 상태 그대로</span>
+            <span className="text-xs tracking-wider uppercase opacity-75 font-semibold">Option A</span>
+            <span className="text-base sm:text-lg font-bold mt-1">보정 전 (원본 소리)</span>
+            <span className="text-xs opacity-75 mt-1">양쪽 귀 불균형 상태 그대로</span>
           </button>
 
-          {/* Option B: 보정 후 */}
+          {/* Option B: 보정 후 (라이트/다크 모드 고대비 가독성 최적화) */}
           <button
             onClick={() => handleToggleBypass(false)}
             className={`flex flex-col items-center justify-center py-4 px-3 rounded-lg border transition-all duration-150 cursor-pointer ${
               !isBypass
                 ? 'bg-[#0f62fe] text-white font-bold border-[#0f62fe] shadow-lg shadow-[#0f62fe]/20'
-                : 'carbon-subcard hover:border-[#8d8d8d]'
+                : 'carbon-subcard hover:border-[#0f62fe]'
             }`}
           >
-            <span className="text-[10px] tracking-wider uppercase text-blue-100">Option B (추천)</span>
-            <span className="text-base font-bold mt-0.5 flex items-center gap-1.5">
-              <span>내 귀 맞춤 소리</span>
-              <CheckCircle className="w-4 h-4 text-emerald-300" />
+            <span
+              className={`text-xs tracking-wider uppercase font-semibold ${
+                !isBypass ? 'text-white/90' : 'text-[#0f62fe] dark:text-[#78a9ff]'
+              }`}
+            >
+              Option B (추천)
             </span>
-            <span className="text-[11px] text-blue-100 mt-0.5">좌/우 귀 감도 차이 보정 적용됨</span>
+            <span
+              className={`text-base sm:text-lg font-bold mt-1 flex items-center gap-1.5 ${
+                !isBypass ? 'text-white' : 'text-[#161616] dark:text-[#f4f4f4]'
+              }`}
+            >
+              <span>내 귀 맞춤 소리</span>
+              <CheckCircle
+                className={`w-4 h-4 ${
+                  !isBypass ? 'text-emerald-300' : 'text-[#198038] dark:text-[#42be65]'
+                }`}
+              />
+            </span>
+            <span
+              className={`text-xs mt-1 font-medium ${
+                !isBypass ? 'text-blue-100' : 'text-[#525252] dark:text-[#c6c6c6]'
+              }`}
+            >
+              좌/우 귀 감도 차이 보정 적용됨
+            </span>
           </button>
         </div>
       </div>
@@ -369,12 +389,12 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
 
           {/* 클릭 가능한 범례(Legend) 버튼 그룹 */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] mr-1 hidden sm:inline">채널 선택:</span>
+            <span className="text-xs text-[#525252] dark:text-[#8d8d8d] mr-1 hidden sm:inline">채널 선택:</span>
             
             {/* 전체 보기 */}
             <button
               onClick={() => setActiveLegend('all')}
-              className={`px-2 py-0.5 rounded font-semibold text-[11px] transition-all duration-150 border cursor-pointer ${
+              className={`px-2.5 py-1 rounded font-semibold text-xs transition-all duration-150 border cursor-pointer ${
                 activeLegend === 'all'
                   ? 'bg-[#161616] text-white dark:bg-[#f4f4f4] dark:text-[#161616] border-[#161616] dark:border-white shadow-xs'
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
@@ -386,26 +406,26 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             {/* 왼쪽 귀 L 버튼 */}
             <button
               onClick={() => setActiveLegend((prev) => (prev === 'left' ? 'all' : 'left'))}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded font-semibold text-[11px] transition-all duration-150 border cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded font-semibold text-xs transition-all duration-150 border cursor-pointer ${
                 activeLegend === 'left'
                   ? 'bg-[#edf5ff] dark:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] border-[#0f62fe] shadow-xs'
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#0f62fe] inline-block" />
               <span>L (왼쪽 귀)</span>
             </button>
 
             {/* 오른쪽 귀 R 버튼 */}
             <button
               onClick={() => setActiveLegend((prev) => (prev === 'right' ? 'all' : 'right'))}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded font-semibold text-[11px] transition-all duration-150 border cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded font-semibold text-xs transition-all duration-150 border cursor-pointer ${
                 activeLegend === 'right'
                   ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 border-purple-400 shadow-xs'
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
               <span>R (오른쪽 귀)</span>
             </button>
           </div>
@@ -424,7 +444,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
               strokeDasharray="2 2"
               strokeWidth="1"
             />
-            <text x="4" y={zeroY - 3} fill="currentColor" className="text-[#8d8d8d]" fontSize="9">
+            <text x="6" y={zeroY - 4} fill="currentColor" className="text-[#8d8d8d] text-xs font-mono font-medium" fontSize="11">
               0 dB
             </text>
 
