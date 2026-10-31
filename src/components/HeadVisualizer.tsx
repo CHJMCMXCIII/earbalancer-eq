@@ -1,6 +1,6 @@
 import React from 'react';
 import { FrequencyBand } from '../data/iso226';
-import { CheckCircle2, Radio } from 'lucide-react';
+import { CheckCircle2, Radio, Play, Square, RotateCcw } from 'lucide-react';
 
 interface HeadVisualizerProps {
   leftDb: number;
@@ -8,6 +8,8 @@ interface HeadVisualizerProps {
   phaseInvert: boolean;
   isPlaying: boolean;
   currentBand: FrequencyBand;
+  onToggleSound?: () => void;
+  onResetCurrent?: () => void;
 }
 
 export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
@@ -16,6 +18,8 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   phaseInvert,
   isPlaying,
   currentBand,
+  onToggleSound,
+  onResetCurrent,
 }) => {
   const leftAmp = Math.max(0.3, Math.min(2.0, 1.0 + leftDb / 12));
   const rightAmp = Math.max(0.3, Math.min(2.0, 1.0 + rightDb / 12));
@@ -286,6 +290,42 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
           {currentBand.description}
         </div>
       </div>
+
+      {/* 하단 사운드 제어 버튼 영역 (머리 그래픽 하단 수직 정렬) */}
+      {onToggleSound && (
+        <div className="w-full mt-3 pt-3 border-t border-[#e0e0e0] dark:border-[#393939] flex flex-col items-center gap-2 z-10">
+          <button
+            onClick={onToggleSound}
+            className={`w-full py-2.5 px-4 rounded-lg font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-150 cursor-pointer ${
+              isPlaying
+                ? 'bg-[#da1e28] hover:bg-[#ba1b23] text-white'
+                : 'bg-[#0f62fe] hover:bg-[#0353e9] text-white shadow-[#0f62fe]/20'
+            }`}
+          >
+            {isPlaying ? (
+              <>
+                <Square className="w-4 h-4 fill-current" />
+                <span>소리 멈추기</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 fill-current" />
+                <span>소리 듣고 맞추기</span>
+              </>
+            )}
+          </button>
+
+          {onResetCurrent && (
+            <button
+              onClick={onResetCurrent}
+              className="flex items-center justify-center gap-1.5 py-1 text-xs text-[#525252] dark:text-[#8d8d8d] hover:text-[#161616] dark:hover:text-[#ffffff] transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>현재 음높이 리셋</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

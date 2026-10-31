@@ -255,7 +255,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
       {/* 2. 메인 2컬럼 레이아웃 (items-stretch: 긴 쪽 길이로 맞추고, 짧은 쪽은 상-하로 퍼지도록 justify-between) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch w-full">
-        {/* 좌측 5컬럼: 머리 중심 방사형 음파 시각 가이드 (h-full & justify-between) */}
+        {/* 좌측 5컬럼: 머리 중심 방사형 음파 시각 가이드 및 하단 소리 제어 버튼 (h-full & justify-between) */}
         <div className="md:col-span-5 h-full w-full">
           <HeadVisualizer
             leftDb={currentBandCalib.leftDb}
@@ -263,55 +263,33 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             phaseInvert={currentBandCalib.phaseInvert}
             isPlaying={isPlaying}
             currentBand={currentBandInfo}
+            onToggleSound={handleToggleSound}
+            onResetCurrent={handleResetCurrent}
           />
         </div>
 
         {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 보조 도구 패널 (h-full & justify-between) */}
         <div className="md:col-span-7 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3.5">
-          {/* 소리 듣기/멈추기 & 리셋 */}
-          <div className="flex items-center justify-between pb-2.5 border-b border-[#e0e0e0] dark:border-[#393939]">
-            <button
-              onClick={handleToggleSound}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded font-bold text-xs sm:text-sm shadow-xs transition-all duration-150 cursor-pointer ${
-                isPlaying
-                  ? 'bg-[#da1e28] hover:bg-[#ba1b23] text-white'
-                  : 'bg-[#0f62fe] hover:bg-[#0353e9] text-white shadow-[#0f62fe]/20'
-              }`}
-            >
-              {isPlaying ? (
-                <>
-                  <Square className="w-4 h-4 fill-current" />
-                  <span>소리 멈추기</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>소리 듣고 맞추기</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleResetCurrent}
-              className="flex items-center gap-1.5 text-xs text-[#525252] dark:text-[#8d8d8d] hover:text-[#161616] dark:hover:text-[#ffffff] cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>현재 음높이 리셋</span>
-            </button>
-          </div>
-
           {actionNotice && (
             <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-600 text-xs font-semibold text-emerald-800 dark:text-emerald-200 transition-all duration-150">
               {actionNotice}
             </div>
           )}
 
-          {/* 보청기 원리 기반 권장 안내 팁 배너 */}
-          <div className="p-2.5 rounded-lg bg-[#edf5ff] dark:bg-[#002d9c]/25 border border-[#d0e2ff] dark:border-[#0043ce]/60 flex items-center gap-2 text-[11px] text-[#0043ce] dark:text-[#78a9ff]">
-            <span className="flex-shrink-0 text-xs">💡</span>
-            <span className="leading-tight">
-              <strong>조절 팁:</strong> 잘 들리는 쪽을 낮추기보다, 보청기처럼 <strong>덜 들리는 쪽 귀의 볼륨을 올려서(+)</strong> 머리 중심으로 맞추면 소리가 답답해지지 않고 시원하게 들려요.
-            </span>
+          {/* 보청기 원리 기반 권장 안내 팁 배너 및 볼륨/청력 안전 주의 문구 */}
+          <div className="p-2.5 rounded-lg bg-[#edf5ff] dark:bg-[#002d9c]/25 border border-[#d0e2ff] dark:border-[#0043ce]/60 space-y-1.5 text-[11px]">
+            <div className="flex items-start gap-2 text-[#0043ce] dark:text-[#78a9ff]">
+              <span className="flex-shrink-0 text-xs mt-0.5">💡</span>
+              <span className="leading-tight">
+                <strong>조절 팁:</strong> 잘 들리는 쪽을 낮추기보다, 보청기처럼 <strong>덜 들리는 쪽 귀의 볼륨을 올려서(+)</strong> 머리 중심으로 맞추면 소리가 답답해지지 않고 시원하게 들려요.
+              </span>
+            </div>
+            <div className="flex items-start gap-2 text-[#da1e28] dark:text-[#fa4d56] font-medium pt-1.5 border-t border-[#d0e2ff]/60 dark:border-[#0043ce]/40">
+              <span className="flex-shrink-0 text-xs mt-0.5">⚠️</span>
+              <span className="leading-tight">
+                <strong>주의:</strong> 볼륨을 과도하게 키우면 이어폰·헤드폰의 드라이버가 고장나거나 청력이 손상될 수 있으니, 적정 음량에서 안전하게 조절해주세요.
+              </span>
+            </div>
           </div>
 
           {/* 왼쪽 귀 (Left Channel) 채널 분리 슬라이더 (0.1 dB 단위 고정) */}
