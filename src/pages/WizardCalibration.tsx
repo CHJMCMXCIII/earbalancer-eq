@@ -13,9 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Wand2,
-  Sliders,
   RotateCcw,
-  Sparkles,
   Lock,
   ArrowRight,
 } from 'lucide-react';
@@ -37,7 +35,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   calibrations,
   setCalibrations,
   onGoToABTest,
-  onGoToExport,
 }) => {
   const activeBandIndices =
     mode === '10-band' ? TEN_BAND_INDICES : FREQUENCY_BANDS.map((_, i) => i);
@@ -54,7 +51,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     phaseInvert: false,
   };
 
-  // 소리 시작 / 정지 토글
   const handleToggleSound = async () => {
     if (isPlaying) {
       audioEngine.stopTone();
@@ -65,13 +61,12 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentBandCalib.leftDb,
         currentBandCalib.rightDb,
         currentBandCalib.phaseInvert,
-        currentBandInfo.isoCompDb // ISO 226 자동 연동 디폴트
+        currentBandInfo.isoCompDb
       );
       setIsPlaying(true);
     }
   };
 
-  // 왼쪽 채널 게인 개별 조절
   const handleUpdateLeft = (db: number) => {
     const updated = [...calibrations];
     updated[currentBandId] = {
@@ -90,7 +85,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 오른쪽 채널 게인 개별 조절
   const handleUpdateRight = (db: number) => {
     const updated = [...calibrations];
     updated[currentBandId] = {
@@ -109,7 +103,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 위상 반전 토글
   const handleTogglePhase = () => {
     const newPhase = !currentBandCalib.phaseInvert;
     const updated = [...calibrations];
@@ -130,7 +123,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 현재 대역 리셋
   const handleResetCurrent = () => {
     const updated = [...calibrations];
     updated[currentBandId] = { leftDb: 0, rightDb: 0, phaseInvert: false };
@@ -140,7 +132,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 단계 이동
   const handleStepChange = (newStep: number) => {
     if (newStep < 0 || newStep >= activeBandIndices.length) return;
     setCurrentStepIndex(newStep);
@@ -160,7 +151,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 10밴드 -> 31밴드 스플라인 보간 자동 채우기
   const handleInterpolateAll = () => {
     const tenBandMap: { [id: number]: { leftDb: number; rightDb: number; phaseDeg: number } } = {};
     TEN_BAND_INDICES.forEach((idx) => {
@@ -180,7 +170,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }));
 
     setCalibrations(newCalibs);
-    setInterpNotice('✨ 31개 전체 주파수가 좌/우 맞춤값에 맞춰 자동 완성되었습니다!');
+    setInterpNotice('✨ 31개 전체 주파수가 좌/우 맞춤값에 맞춰 자동 계산되었습니다!');
     setTimeout(() => setInterpNotice(null), 3500);
   };
 
@@ -191,12 +181,74 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   }, []);
 
   return (
-    <div className="flex flex-col justify-between h-full space-y-3">
-      {/* 상단 툴바: 모드 선택 & 자동 채우기 (컴팩트 흑백 바) */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-zinc-900/90 rounded-xl border border-zinc-800 text-xs">
+    <div className="flex flex-col justify-start items-stretch gap-3 w-full">
+      {/* 1. 최상단으로 이동한 핵심 내비게이션 & 제어 바 */}
+      <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs transition-colors">
+        {/* 이전 / 다음 음높이 버튼 & 도트 */}
         <div className="flex items-center gap-2">
-          <span className="text-zinc-400 font-medium text-[11px]">모드:</span>
-          <div className="inline-flex p-0.5 bg-zinc-950 rounded-lg border border-zinc-800">
+          <button
+            onClick={() => handleStepChange(currentStepIndex - 1)}
+            disabled={currentStepIndex === 0}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 disabled:opacity-30 disabled:pointer-events-none text-zinc-800 dark:text-zinc-200 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>이전</span>
+          </button>
+
+          {/* 주파수 스텝 인디케이터 도트 */}
+          <div className="flex items-center gap-1 overflow-x-auto max-w-[160px] sm:max-w-xs px-1">
+            {activeBandIndices.map((bIdx, idx) => {
+              const isDone =
+                calibrations[bIdx].leftDb !== 0 ||
+                calibrations[bIdx].rightDb !== 0 ||
+                calibrations[bIdx].phaseInvert;
+              const isCurrent = idx === currentStepIndex;
+
+              return (
+                <button
+                  key={bIdx}
+                  onClick={() => handleStepChange(idx)}
+                  title={`${FREQUENCY_BANDS[bIdx].label}`}
+                  className={`h-2 rounded-full transition-all ${
+                    isCurrent
+                      ? 'w-5 bg-blue-500'
+                      : isDone
+                      ? 'w-2 bg-emerald-500'
+                      : 'w-2 bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-400 dark:hover:bg-zinc-500'
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {currentStepIndex < activeBandIndices.length - 1 ? (
+            <button
+              onClick={() => handleStepChange(currentStepIndex + 1)}
+              className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow"
+            >
+              <span>다음</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button
+              onClick={onGoToABTest}
+              className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow"
+            >
+              <span>비교하기</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* 모드 선택 & 자동 채우기 */}
+        <div className="flex items-center gap-2">
+          {interpNotice && (
+            <span className="text-emerald-600 dark:text-emerald-400 text-[11px] font-medium hidden sm:inline">
+              {interpNotice}
+            </span>
+          )}
+
+          <div className="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800">
             <button
               onClick={() => {
                 setMode('10-band');
@@ -204,11 +256,11 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               }}
               className={`px-2.5 py-1 rounded-md font-semibold transition-all text-xs ${
                 mode === '10-band'
-                  ? 'bg-zinc-100 text-zinc-950 shadow'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
               }`}
             >
-              10단계 간편 모드
+              10단계 간편
             </button>
             <button
               onClick={() => {
@@ -217,36 +269,29 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               }}
               className={`px-2.5 py-1 rounded-md font-semibold transition-all text-xs ${
                 mode === '31-band'
-                  ? 'bg-zinc-100 text-zinc-950 shadow'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
               }`}
             >
-              31단계 정밀 모드
+              31단계 정밀
             </button>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {interpNotice && (
-            <span className="text-emerald-400 text-[11px] animate-fade-in font-medium">
-              {interpNotice}
-            </span>
-          )}
           <button
             onClick={handleInterpolateAll}
             title="10개 주파수 값을 바탕으로 31개 전체 대역을 보간합니다"
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-lg border border-zinc-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors"
           >
-            <Wand2 className="w-3.5 h-3.5 text-blue-400" />
-            <span>비슷한 주파수 한 번에 채우기</span>
+            <Wand2 className="w-3.5 h-3.5 text-blue-500" />
+            <span className="hidden sm:inline">한 번에 채우기</span>
           </button>
         </div>
       </div>
 
-      {/* 메인 2컬럼 레이아웃 (노스크롤 맞춤: 시각 가이드와 슬라이더를 나란히 배치) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 items-stretch">
+      {/* 2. 메인 2컬럼 레이아웃 (상단 정렬: 요소가 상하로 벌어지지 않음) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
         {/* 좌측 5컬럼: 머리 중심 방사형 음파 시각 가이드 */}
-        <div className="md:col-span-5 h-full">
+        <div className="md:col-span-5 w-full">
           <HeadVisualizer
             leftDb={currentBandCalib.leftDb}
             rightDb={currentBandCalib.rightDb}
@@ -257,9 +302,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         </div>
 
         {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 ISO 226 자동 연동 패널 */}
-        <div className="md:col-span-7 p-4 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-xl flex flex-col justify-between space-y-3">
-          {/* 소리 재생 / 정지 & 리셋 */}
-          <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+        <div className="md:col-span-7 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl flex flex-col justify-start gap-3 transition-colors">
+          {/* 소리 듣기/멈추기 & 리셋 */}
+          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
             <button
               onClick={handleToggleSound}
               className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-xs shadow-md transition-all duration-150 ${
@@ -283,21 +328,21 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
             <button
               onClick={handleResetCurrent}
-              className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-200"
+              className="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200"
             >
               <RotateCcw className="w-3 h-3" />
               <span>현재 음높이 리셋</span>
             </button>
           </div>
 
-          {/* 핵심 1: 왼쪽 귀 (Left Channel) 채널 분리 독립 슬라이더 */}
-          <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 space-y-1.5">
+          {/* 왼쪽 귀 (Left Channel) 채널 분리 슬라이더 */}
+          <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex justify-between items-center text-xs font-semibold">
-              <span className="text-zinc-200 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+              <span className="text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
                 <span>왼쪽 귀 (Channel: L) 소리 크기 보정</span>
               </span>
-              <span className="font-mono text-blue-400 text-xs">
+              <span className="font-mono text-blue-600 dark:text-blue-400 text-xs font-bold">
                 {currentBandCalib.leftDb > 0 ? `+${currentBandCalib.leftDb}` : currentBandCalib.leftDb} dB
               </span>
             </div>
@@ -310,20 +355,20 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 step="0.5"
                 value={currentBandCalib.leftDb}
                 onChange={(e) => handleUpdateLeft(parseFloat(e.target.value))}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
               <span className="text-[10px] text-zinc-500 font-mono">+12 dB</span>
             </div>
           </div>
 
-          {/* 핵심 2: 오른쪽 귀 (Right Channel) 채널 분리 독립 슬라이더 */}
-          <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 space-y-1.5">
+          {/* 오른쪽 귀 (Right Channel) 채널 분리 슬라이더 */}
+          <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex justify-between items-center text-xs font-semibold">
-              <span className="text-zinc-200 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+              <span className="text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
                 <span>오른쪽 귀 (Channel: R) 소리 크기 보정</span>
               </span>
-              <span className="font-mono text-blue-400 text-xs">
+              <span className="font-mono text-blue-600 dark:text-blue-400 text-xs font-bold">
                 {currentBandCalib.rightDb > 0 ? `+${currentBandCalib.rightDb}` : currentBandCalib.rightDb} dB
               </span>
             </div>
@@ -336,103 +381,47 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 step="0.5"
                 value={currentBandCalib.rightDb}
                 onChange={(e) => handleUpdateRight(parseFloat(e.target.value))}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
               <span className="text-[10px] text-zinc-500 font-mono">+12 dB</span>
             </div>
           </div>
 
-          {/* 핵심 3: ISO 226 표준 전체 음량 자동 연동 상태 (사용자 임의 수정 불가 / Read-Only 처리) */}
-          <div className="p-2.5 bg-zinc-950/80 rounded-xl border border-zinc-800 flex items-center justify-between text-xs">
+          {/* ISO 226 표준 전체 음량 자동 연동 상태 (사용자 임의 수정 잠금) */}
+          <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950/80 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs transition-colors">
             <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+              <Lock className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
               <div>
-                <div className="font-semibold text-zinc-300 text-[11px]">
-                  ISO 226 표준 전체 음량 자동 연동 (자동 Default)
+                <div className="font-semibold text-zinc-800 dark:text-zinc-300 text-[11px]">
+                  ISO 226 표준 전체 음량 자동 연동 (Default)
                 </div>
                 <div className="text-[10px] text-zinc-500">
-                  인간 청각 특성에 맞춰 시스템이 자동 보정 (사용자 임의 변경 잠금)
+                  인간 청각 특성에 맞춰 시스템이 자동 보정 (임의 변경 잠금)
                 </div>
               </div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-700/80 px-2 py-1 rounded font-mono text-[11px] text-zinc-300 font-semibold flex-shrink-0">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 px-2 py-1 rounded font-mono text-[11px] text-zinc-700 dark:text-zinc-300 font-semibold flex-shrink-0 shadow-xs">
               +{currentBandInfo.isoCompDb.toFixed(1)} dB 보정됨
             </div>
           </div>
 
-          {/* 위상 반전 보조 옵션 */}
+          {/* 위상 반전 옵션 */}
           <div className="flex items-center justify-between pt-1">
-            <div className="text-[11px] text-zinc-400">
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
               소리가 머리 밖으로 흩어질 때:
             </div>
             <button
               onClick={handleTogglePhase}
               className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
                 currentBandCalib.phaseInvert
-                  ? 'bg-purple-600 text-white border-purple-400'
-                  : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white'
+                  ? 'bg-purple-600 text-white border-purple-500'
+                  : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
               }`}
             >
               {currentBandCalib.phaseInvert ? '180° 위상 반전 ON' : '위상 정상 (0°)'}
             </button>
           </div>
         </div>
-      </div>
-
-      {/* 하단 네비게이션: 이전 / 다음 대역 및 진행 표시 (컴팩트) */}
-      <div className="flex items-center justify-between p-2 bg-zinc-900/90 rounded-xl border border-zinc-800 text-xs">
-        <button
-          onClick={() => handleStepChange(currentStepIndex - 1)}
-          disabled={currentStepIndex === 0}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:pointer-events-none text-zinc-200 transition-colors"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-          <span>이전</span>
-        </button>
-
-        {/* 주파수 스텝 인디케이터 도트 */}
-        <div className="flex items-center gap-1 overflow-x-auto max-w-sm px-2">
-          {activeBandIndices.map((bIdx, idx) => {
-            const isDone =
-              calibrations[bIdx].leftDb !== 0 ||
-              calibrations[bIdx].rightDb !== 0 ||
-              calibrations[bIdx].phaseInvert;
-            const isCurrent = idx === currentStepIndex;
-
-            return (
-              <button
-                key={bIdx}
-                onClick={() => handleStepChange(idx)}
-                title={`${FREQUENCY_BANDS[bIdx].label}`}
-                className={`h-2 rounded-full transition-all ${
-                  isCurrent
-                    ? 'w-5 bg-blue-500'
-                    : isDone
-                    ? 'w-2 bg-emerald-500'
-                    : 'w-2 bg-zinc-700 hover:bg-zinc-500'
-                }`}
-              />
-            );
-          })}
-        </div>
-
-        {currentStepIndex < activeBandIndices.length - 1 ? (
-          <button
-            onClick={() => handleStepChange(currentStepIndex + 1)}
-            className="flex items-center gap-1 px-4 py-1.5 rounded-lg font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-all shadow"
-          >
-            <span>다음 음높이</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        ) : (
-          <button
-            onClick={onGoToABTest}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow"
-          >
-            <span>비교하기 (A/B)</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        )}
       </div>
     </div>
   );

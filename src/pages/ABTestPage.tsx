@@ -9,8 +9,6 @@ import {
   ArrowLeft,
   CheckCircle,
   Headphones,
-  Music,
-  Scale,
 } from 'lucide-react';
 
 interface ABTestPageProps {
@@ -91,12 +89,12 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
     .join(' ');
 
   return (
-    <div className="flex flex-col justify-between h-full space-y-3">
+    <div className="flex flex-col justify-start items-stretch gap-3 w-full">
       {/* 상단 비교 컨트롤 바 */}
-      <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-xl border border-zinc-800 text-xs">
+      <div className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs transition-colors">
         <div className="flex items-center gap-2">
-          <Headphones className="w-4 h-4 text-zinc-300" />
-          <span className="font-semibold text-zinc-200">
+          <Headphones className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
             보정 전(원본) vs 보정 후(내 귀 맞춤) 청음 비교
           </span>
         </div>
@@ -123,7 +121,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             )}
           </button>
 
-          <label className="cursor-pointer px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700 transition-colors flex items-center gap-1">
+          <label className="cursor-pointer px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700 transition-colors flex items-center gap-1">
             <Upload className="w-3 h-3" />
             <span className="max-w-[120px] truncate">
               {customFileName ? customFileName : '내 음악 열기'}
@@ -138,16 +136,16 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
         </div>
       </div>
 
-      {/* A / B 핵심 전환 스위치 (흑백 모노크롬 카드에 선택 항목만 하이라이트) */}
-      <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-xl space-y-3">
+      {/* A / B 핵심 전환 스위치 (체감 음량 안내문 제거됨) */}
+      <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl transition-colors">
         <div className="grid grid-cols-2 gap-3">
           {/* Option A: 보정 전 */}
           <button
             onClick={() => handleToggleBypass(true)}
             className={`flex flex-col items-center justify-center py-4 px-3 rounded-xl border transition-all ${
               isBypass
-                ? 'bg-zinc-100 text-zinc-950 font-bold border-white shadow-lg'
-                : 'bg-zinc-950/70 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700'
+                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold border-zinc-900 dark:border-white shadow-md'
+                : 'bg-zinc-50 dark:bg-zinc-950/70 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
             <span className="text-[10px] tracking-wider uppercase opacity-70">Option A</span>
@@ -161,7 +159,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             className={`flex flex-col items-center justify-center py-4 px-3 rounded-xl border transition-all ${
               !isBypass
                 ? 'bg-blue-600 text-white font-bold border-blue-400 shadow-lg shadow-blue-900/40'
-                : 'bg-zinc-950/70 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700'
+                : 'bg-zinc-50 dark:bg-zinc-950/70 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200'
             }`}
           >
             <span className="text-[10px] tracking-wider uppercase text-blue-200">Option B (추천)</span>
@@ -172,48 +170,40 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             <span className="text-[11px] text-blue-100 mt-0.5">좌/우 귀 감도 차이 보정 적용됨</span>
           </button>
         </div>
-
-        {/* 체감 음량 게인 매칭 배너 */}
-        <div className="p-2 bg-zinc-950 rounded-xl border border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-          <div className="flex items-center gap-1.5">
-            <Scale className="w-3.5 h-3.5 text-zinc-300" />
-            <span>체감 음량 자동 매칭 (볼륨 차이로 인한 착시 제거)</span>
-          </div>
-          <span className="text-emerald-400 text-[11px] font-semibold">자동 연동 활성</span>
-        </div>
       </div>
 
-      {/* 31밴드 좌/우 보정 곡선 미리보기 그래프 (컴팩트) */}
-      <div className="p-3 bg-zinc-900 rounded-xl border border-zinc-800 space-y-1.5">
+      {/* 31밴드 좌/우 보정 곡선 미리보기 그래프 */}
+      <div className="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-1.5 transition-colors">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-zinc-300">내 청각 캘리브레이션 주파수 곡선</span>
-          <div className="flex items-center gap-4 text-zinc-400 text-[11px]">
+          <span className="font-semibold text-zinc-700 dark:text-zinc-300">내 청각 캘리브레이션 주파수 곡선</span>
+          <div className="flex items-center gap-4 text-zinc-500 dark:text-zinc-400 text-[11px]">
             <span className="flex items-center gap-1">
-              <span className="w-2.5 h-1 bg-blue-400 inline-block rounded" /> L (왼쪽 귀)
+              <span className="w-2.5 h-1 bg-blue-500 inline-block rounded" /> L (왼쪽 귀)
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2.5 h-1 bg-purple-400 inline-block rounded" /> R (오른쪽 귀)
+              <span className="w-2.5 h-1 bg-purple-500 inline-block rounded" /> R (오른쪽 귀)
             </span>
           </div>
         </div>
 
-        <div className="bg-zinc-950 rounded-lg p-2 border border-zinc-800">
+        <div className="bg-zinc-50 dark:bg-zinc-950 rounded-lg p-2 border border-zinc-200 dark:border-zinc-800 transition-colors">
           <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-24">
             <line
               x1="0"
               y1={zeroY}
               x2={svgWidth}
               y2={zeroY}
-              stroke="#3f3f46"
+              stroke="currentColor"
+              className="text-zinc-300 dark:text-zinc-700"
               strokeDasharray="2 2"
               strokeWidth="1"
             />
-            <text x="4" y={zeroY - 3} fill="#71717a" fontSize="9">
+            <text x="4" y={zeroY - 3} fill="currentColor" className="text-zinc-400 dark:text-zinc-500" fontSize="9">
               0 dB
             </text>
             <polyline
               fill="none"
-              stroke="#60a5fa"
+              stroke="#3b82f6"
               strokeWidth="2"
               points={leftPoints}
               strokeLinecap="round"
@@ -221,7 +211,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             />
             <polyline
               fill="none"
-              stroke="#c084fc"
+              stroke="#a855f7"
               strokeWidth="2"
               points={rightPoints}
               strokeLinecap="round"
@@ -232,10 +222,10 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       </div>
 
       {/* 하단 네비게이션 */}
-      <div className="flex items-center justify-between p-2 bg-zinc-900/90 rounded-xl border border-zinc-800 text-xs">
+      <div className="flex items-center justify-between p-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs transition-colors">
         <button
           onClick={onBackToCalibration}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>다시 세부 조절하기</span>
