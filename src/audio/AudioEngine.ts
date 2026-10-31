@@ -1,5 +1,6 @@
 // Web Audio API Audio Engine
-// 실시간 소리 생성, 좌/우 개별 채널 제어, ISO 226 자동 연동, 체감 음량 자동 매칭 (Gain Matching), 소프트 리미터
+// 실시간 소리 생성, 좌/우 개별 채널 제어, ISO 226 자동 연동,
+// 끊김 없는 무중단 A/B 전환 (Gapless A/B Switching), 체감 음량 자동 매칭 (Gain Matching), 소프트 리미터
 
 export interface BandCalibration {
   leftDb: number;       // -15 dB ~ +15 dB (사용자 좌측 귀 보정)
@@ -20,10 +21,14 @@ export class AudioEngine {
   private toneActive: boolean = false;
   private currentFrequency: number = 1000;
 
-  // A/B 테스트용 오디오 재생기
+  // A/B 테스트용 무중단 오디오 재생기
   private abSourceNode: AudioBufferSourceNode | null = null;
   private abAudioBuffer: AudioBuffer | null = null;
-  private abGainNode: GainNode | null = null;
+  private abSplitter: ChannelSplitterNode | null = null;
+  private abBypassGain: GainNode | null = null; // Option A (원본 바이패스 게인)
+  private abEqGain: GainNode | null = null;     // Option B (내 귀 맞춤 EQ 게인)
+  private abFiltersLeft: BiquadFilterNode[] = [];
+  private abFiltersRight: BiquadFilterNode[] = [];
   private abIsPlaying: boolean = false;
   private abBypass: boolean = false;
 
@@ -102,6 +107,7 @@ export class AudioEngine {
     const effectiveRightDb = rightDb + clampedIso;
 
     const leftLinear = baseLinear * Math.pow(10, effectiveLeftDb / 20);
+    // phaseInvert일 경우 우측 채널 위상을 180도 반전 (-1)
     const rightLinear = baseLinear * Math.pow(10, effectiveRightDb / 20) * (phaseInvert ? -1 : 1);
 
     this.oscLeftGain = this.ctx.createGain();
@@ -143,7 +149,8 @@ export class AudioEngine {
     const effectiveRightDb = rightDb + clampedIso;
 
     const leftLinear = Math.max(0.0001, baseLinear * Math.pow(10, effectiveLeftDb / 20));
-    const rightLinear = Math.max(0.0001, baseLinear * Math.pow(10, effectiveRightDb / 20));
+    // 위상 반전 시 부호 반전
+    const rightLinear = (phaseInvert ? -1 : 1) * Math.max(0.0001, baseLinear * Math.pow(10, effectiveRightDb / 20));
 
     this.oscLeftGain.gain.setTargetAtTime(leftLinear, now, 0.015);
     this.oscRightGain.gain.setTargetAtTime(rightLinear, now, 0.015);
@@ -227,11 +234,10 @@ export class AudioEngine {
   }
 
   /**
-   * A/B 비교 테스트 재생
-   * [체감 음량 자동 매칭 (Gain Matching) 엔진]:
-   * EQ 적용 시 주파수 증폭에 따른 볼륨 상승분을 계산하여,
-   * 보정 전(Bypass)과 보정 후의 체감 음량을 동일하게 일치시킴으로써
-   * 소리가 단지 커서 더 좋게 들리는 심리음향학적 착시를 원천 방지
+   * [무중단 A/B 비교 테스트 재생 (Gapless & Continuous Playing)]
+   * 사용자가 Option A(보정 전) <-> Option B(보정 후)를 전환하더라도,
+   * 음원이 처음부터 다시 재생되지 않고 현재 재생 위치를 유지하면서
+   * 크로스페이드로 즉시 전환되는 듀얼 패스(Dual Path) 오디오 그래프 구축
    */
   public async startABTest(
     calibrations: { freq: number; leftDb: number; rightDb: number }[],
@@ -246,78 +252,108 @@ export class AudioEngine {
       this.abAudioBuffer = this.createAmbientTestBuffer();
     }
 
+    const now = ctx.currentTime;
     this.abSourceNode = ctx.createBufferSource();
     this.abSourceNode.buffer = this.abAudioBuffer;
     this.abSourceNode.loop = true;
 
-    this.abGainNode = ctx.createGain();
-    this.abBypass = bypass;
-
     // 체감 음량 자동 매칭 (Gain Matching) 계산
-    const totalBoost = calibrations.reduce(
-      (acc, c) => acc + (c.leftDb + c.rightDb) / 2,
-      0
-    );
+    const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
     const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
-    // EQ 적용 시 평균 증폭분을 마이너스 보정하여 바이패스와 실효 음량 일치
-    const gainMatchCompDb = !bypass ? -avgBoostDb * 0.75 : 0;
-    const gainMatchLinear = Math.pow(10, gainMatchCompDb / 20);
+    const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
 
-    this.abGainNode.gain.setValueAtTime(gainMatchLinear, ctx.currentTime);
+    // 1. 원본 바이패스 경로 게인 노드 (Option A)
+    this.abBypassGain = ctx.createGain();
+    this.abBypassGain.gain.setValueAtTime(bypass ? 1.0 : 0.0, now);
 
-    if (!bypass) {
-      const splitter = ctx.createChannelSplitter(2);
-      const merger = ctx.createChannelMerger(2);
+    // 2. EQ 필터 체인 통과 경로 게인 노드 (Option B)
+    this.abEqGain = ctx.createGain();
+    this.abEqGain.gain.setValueAtTime(!bypass ? gainMatchLinear : 0.0, now);
 
-      let prevLeft: AudioNode = splitter;
-      let prevRight: AudioNode = splitter;
+    // 3. 31밴드 스테레오 필터 체인 구축
+    this.abFiltersLeft = [];
+    this.abFiltersRight = [];
 
-      calibrations.forEach((b, idx) => {
-        const leftFilt = ctx.createBiquadFilter();
-        leftFilt.type = 'peaking';
-        leftFilt.frequency.setValueAtTime(b.freq, ctx.currentTime);
-        leftFilt.Q.setValueAtTime(4.31, ctx.currentTime);
-        leftFilt.gain.setValueAtTime(b.leftDb, ctx.currentTime);
+    const splitter = ctx.createChannelSplitter(2);
+    const merger = ctx.createChannelMerger(2);
 
-        const rightFilt = ctx.createBiquadFilter();
-        rightFilt.type = 'peaking';
-        rightFilt.frequency.setValueAtTime(b.freq, ctx.currentTime);
-        rightFilt.Q.setValueAtTime(4.31, ctx.currentTime);
-        rightFilt.gain.setValueAtTime(b.rightDb, ctx.currentTime);
+    let prevLeft: AudioNode = splitter;
+    let prevRight: AudioNode = splitter;
 
-        if (idx === 0) {
-          splitter.connect(leftFilt, 0);
-          splitter.connect(rightFilt, 1);
-        } else {
-          prevLeft.connect(leftFilt);
-          prevRight.connect(rightFilt);
-        }
+    calibrations.forEach((b, idx) => {
+      const leftFilt = ctx.createBiquadFilter();
+      leftFilt.type = 'peaking';
+      leftFilt.frequency.setValueAtTime(b.freq, now);
+      leftFilt.Q.setValueAtTime(4.31, now);
+      leftFilt.gain.setValueAtTime(b.leftDb, now);
 
-        prevLeft = leftFilt;
-        prevRight = rightFilt;
-      });
+      const rightFilt = ctx.createBiquadFilter();
+      rightFilt.type = 'peaking';
+      rightFilt.frequency.setValueAtTime(b.freq, now);
+      rightFilt.Q.setValueAtTime(4.31, now);
+      rightFilt.gain.setValueAtTime(b.rightDb, now);
 
-      prevLeft.connect(merger, 0, 0);
-      prevRight.connect(merger, 0, 1);
+      this.abFiltersLeft.push(leftFilt);
+      this.abFiltersRight.push(rightFilt);
 
-      this.abSourceNode.connect(splitter);
-      merger.connect(this.abGainNode);
-    } else {
-      this.abSourceNode.connect(this.abGainNode);
-    }
+      if (idx === 0) {
+        splitter.connect(leftFilt, 0);
+        splitter.connect(rightFilt, 1);
+      } else {
+        prevLeft.connect(leftFilt);
+        prevRight.connect(rightFilt);
+      }
 
-    this.abGainNode.connect(this.masterGain);
-    this.abSourceNode.start(0);
+      prevLeft = leftFilt;
+      prevRight = rightFilt;
+    });
+
+    prevLeft.connect(merger, 0, 0);
+    prevRight.connect(merger, 0, 1);
+
+    // 오디오 소스를 두 경로로 동시 분기 연결
+    // 경로 A: Direct -> abBypassGain -> masterGain
+    this.abSourceNode.connect(this.abBypassGain);
+    this.abBypassGain.connect(this.masterGain);
+
+    // 경로 B: Filtered -> abEqGain -> masterGain
+    this.abSourceNode.connect(splitter);
+    merger.connect(this.abEqGain);
+    this.abEqGain.connect(this.masterGain);
+
+    this.abSourceNode.start(now);
     this.abIsPlaying = true;
+    this.abBypass = bypass;
   }
 
+  /**
+   * [무중단 실시간 전환]
+   * 음원을 멈추거나 재시작하지 않고, 볼륨 크로스페이드(Crossfade)로 즉시 전환
+   */
   public toggleABBypass(
     bypass: boolean,
     calibrations: { freq: number; leftDb: number; rightDb: number }[]
   ) {
-    if (!this.abIsPlaying) return;
+    if (!this.abIsPlaying || !this.ctx || !this.abBypassGain || !this.abEqGain) return;
+
     this.abBypass = bypass;
-    this.startABTest(calibrations, bypass);
+    const now = this.ctx.currentTime;
+    const timeConstant = 0.015; // 15ms 고속 팝 방지 크로스페이드
+
+    // 체감 음량 자동 매칭 계산
+    const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
+    const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
+    const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
+
+    if (bypass) {
+      // Option A 활성화: 원본 바이패스는 켜고 EQ 경로는 끔
+      this.abBypassGain.gain.setTargetAtTime(1.0, now, timeConstant);
+      this.abEqGain.gain.setTargetAtTime(0.0001, now, timeConstant);
+    } else {
+      // Option B 활성화: EQ 경로는 켜고 원본 바이패스는 끔
+      this.abBypassGain.gain.setTargetAtTime(0.0001, now, timeConstant);
+      this.abEqGain.gain.setTargetAtTime(gainMatchLinear, now, timeConstant);
+    }
   }
 
   public stopABTest() {

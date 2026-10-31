@@ -27,10 +27,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   const rightWaveOffset = rightDb * 3;
 
   return (
-    <div className="relative flex flex-col items-center justify-between p-4 bg-white dark:bg-zinc-900/90 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl overflow-hidden h-full transition-colors">
-      {/* 배경 미세 그리드 */}
-      <div className="absolute inset-0 bg-[radial-gradient(#d4d4d8_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:14px_14px] opacity-40 pointer-events-none" />
-
+    <div className="relative flex flex-col items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl overflow-hidden h-full transition-colors">
       {/* 상단 밸런스 상태 텍스트 */}
       <div className="w-full flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 z-10 pb-1">
         <div className="flex items-center gap-1.5 font-medium">
@@ -47,30 +44,19 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             </span>
           ) : diffDb < 0 ? (
             <span className="text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-[11px]">
-              왼쪽이 <strong className="text-blue-600 dark:text-blue-400">+{Math.abs(diffDb)} dB</strong> 더 큼
+              왼쪽이 <strong className="text-blue-600 dark:text-blue-400">+{Math.abs(diffDb).toFixed(1)} dB</strong> 더 큼
             </span>
           ) : (
             <span className="text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-[11px]">
-              오른쪽이 <strong className="text-blue-600 dark:text-blue-400">+{diffDb} dB</strong> 더 큼
+              오른쪽이 <strong className="text-blue-600 dark:text-blue-400">+{diffDb.toFixed(1)} dB</strong> 더 큼
             </span>
           )}
         </div>
       </div>
 
       {/* 머리 중심 방사형 음파 일러스트레이션 (SVG) */}
-      <div className="relative w-full max-w-[320px] h-44 flex items-center justify-center z-10">
+      <div className="relative w-full max-w-[320px] h-44 flex items-center justify-center z-10 my-auto">
         <svg viewBox="0 0 320 180" className="w-full h-full">
-          <defs>
-            <linearGradient id="headLight" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e4e4e7" />
-              <stop offset="100%" stopColor="#d4d4d8" />
-            </linearGradient>
-            <linearGradient id="headDark" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#27272a" />
-              <stop offset="100%" stopColor="#18181b" />
-            </linearGradient>
-          </defs>
-
           {/* 중앙 수직 기준선 */}
           <line
             x1="160"
@@ -78,7 +64,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             x2="160"
             y2="170"
             stroke="currentColor"
-            className="text-zinc-200 dark:text-zinc-800"
+            className="text-zinc-300 dark:text-zinc-800"
             strokeDasharray="3 3"
             strokeWidth="1.5"
           />
@@ -183,7 +169,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
           <g transform="translate(160, 95)">
             <path
               d="M -6 -42 Q 0 -58 6 -42 Z"
-              className="fill-zinc-400 dark:fill-zinc-700 stroke-zinc-500 dark:stroke-zinc-600"
+              className="fill-zinc-300 dark:fill-zinc-700 stroke-zinc-400 dark:stroke-zinc-600"
               strokeWidth="1.5"
             />
             <ellipse
@@ -208,9 +194,8 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             <text
               x="-70"
               y="4"
-              className="fill-zinc-600 dark:fill-zinc-400"
+              className="fill-zinc-600 dark:fill-zinc-400 font-bold"
               fontSize="10"
-              fontWeight="bold"
               textAnchor="middle"
             >
               L
@@ -229,9 +214,8 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             <text
               x="70"
               y="4"
-              className="fill-zinc-600 dark:fill-zinc-400"
+              className="fill-zinc-600 dark:fill-zinc-400 font-bold"
               fontSize="10"
-              fontWeight="bold"
               textAnchor="middle"
             >
               R
