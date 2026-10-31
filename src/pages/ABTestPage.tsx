@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   CheckCircle,
   Music,
+  Info,
 } from 'lucide-react';
 
 interface ABTestPageProps {
@@ -321,6 +322,17 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
               {formatTime(hoverTime)}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Equalizer APO 기존 사용자 재설정 주의 안내 배너 */}
+      <div className="p-2.5 carbon-subcard rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 flex items-start gap-2 text-xs shadow-xs">
+        <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+        <div className="text-[11px] leading-relaxed text-[#161616] dark:text-[#f4f4f4]">
+          <strong className="text-amber-800 dark:text-amber-200">💡 이전에 이미 Equalizer APO를 설정해 사용 중이셨나요?</strong>
+          <p className="text-[#525252] dark:text-[#c6c6c6] mt-0.5">
+            윈도우에서 Equalizer APO가 이미 켜져 있다면 소리가 이중으로 보정되어 왜곡될 수 있습니다. <strong>Configuration Editor</strong>에서 기존 EQ 블록의 전원 아이콘(⭕)을 잠시 끈 뒤 소리를 비교해보세요.
+          </p>
         </div>
       </div>
 

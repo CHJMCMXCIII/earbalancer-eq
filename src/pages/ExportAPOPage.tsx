@@ -219,7 +219,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
 
       {/* 3. 메인 2컬럼 레이아웃 (items-stretch: 긴 쪽 길이로 맞추고, 짧은 카드는 상-하로 퍼지도록 flex-col justify-between) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-stretch w-full">
-        {/* 좌측 7컬럼: 연동 옵션 (자동 반영 vs 파일 다운로드) */}
+        {/* 좌측 7컬럼: 연동 옵션 (프로필명, Preamp, 파일 다운로드, 내 저장 프로필) */}
         <div className="md:col-span-7 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3.5">
           {/* 프로필 이름 및 Preamp 안전 설정 */}
           <div className="grid grid-cols-2 gap-3.5 pb-3 border-b border-[#e0e0e0] dark:border-[#393939]">
@@ -275,8 +275,8 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
           </div>
 
-          {/* 설정 파일 다운로드 영역 (자동 반영 카드는 추후 Rust/Go 스탠드얼론 앱 개발 시 추가 예정으로 숨김 처리) */}
-          <div className="space-y-3 my-auto">
+          {/* 설정 파일 다운로드 영역 */}
+          <div className="space-y-3">
             <div className="p-3.5 carbon-subcard rounded-lg flex items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <div className="text-xs sm:text-sm font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5">
@@ -298,59 +298,64 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
           </div>
 
-          {/* 클립보드 복사 바 */}
-          <div className="flex items-center justify-between pt-2 border-t border-[#e0e0e0] dark:border-[#393939] text-xs">
-            <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-              Equalizer APO 규격: GraphicEQ (Channel: L / R 개별 분리)
-            </span>
-            <button
-              onClick={handleCopyClipboard}
-              className="flex items-center gap-1 text-[11px] text-[#0f62fe] dark:text-[#78a9ff] hover:underline cursor-pointer font-medium"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? '복사됨!' : '전체 문법 클립보드 복사'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 우측 5컬럼: 프로필 목록 & GraphicEQ 실시간 미리보기 (h-full & justify-between) */}
-        <div className="md:col-span-5 h-full flex flex-col justify-between gap-3.5 w-full">
-          {/* 내 프로필 목록 */}
-          <div className="p-3 carbon-card rounded-xl shadow-xs space-y-2">
+          {/* 내 저장 프로필 (좌측 카드 다운로드 버튼 아래로 이동) */}
+          <div className="pt-2.5 border-t border-[#e0e0e0] dark:border-[#393939] space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-[#161616] dark:text-[#f4f4f4]">
               <span>내 저장 프로필 ({profiles.length})</span>
             </div>
-            <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
-              {profiles.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between p-1.5 carbon-subcard rounded text-xs"
-                >
-                  <span
-                    onClick={() => handleLoadProfile(p)}
-                    className="cursor-pointer text-[#161616] dark:text-[#f4f4f4] hover:text-[#0f62fe] truncate flex-1 font-medium text-xs"
-                  >
-                    {p.name}
-                  </span>
-                  <button
-                    onClick={() => handleDeleteProfile(p.id, p.name)}
-                    className="text-[#8d8d8d] hover:text-[#da1e28] p-1 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+            <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+              {profiles.length === 0 ? (
+                <div className="text-[11px] text-[#8d8d8d] py-1 text-center">
+                  저장된 프로필이 없습니다. 위에서 기기명을 입력하고 저장 버튼을 눌러보세요.
                 </div>
-              ))}
+              ) : (
+                profiles.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between p-1.5 carbon-subcard rounded text-xs"
+                  >
+                    <span
+                      onClick={() => handleLoadProfile(p)}
+                      className="cursor-pointer text-[#161616] dark:text-[#f4f4f4] hover:text-[#0f62fe] truncate flex-1 font-medium text-xs"
+                    >
+                      {p.name}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteProfile(p.id, p.name)}
+                      className="text-[#8d8d8d] hover:text-[#da1e28] p-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
+        </div>
 
-          {/* GraphicEQ 미리보기 (flex-1로 채워짐, 11px 폰트) */}
-          <div className="p-3 carbon-subcard rounded-xl font-mono text-xs text-[#525252] dark:text-[#c6c6c6] flex-1 flex flex-col justify-between shadow-xs">
-            <div className="text-[#161616] dark:text-[#f4f4f4] pb-1 border-b border-[#e0e0e0] dark:border-[#393939] font-bold text-xs">
-              Equalizer APO GraphicEQ 문법 미리보기
-            </div>
-            <pre className="max-h-36 overflow-y-auto whitespace-pre-wrap leading-tight my-auto text-[#161616] dark:text-[#f4f4f4] text-[11px]">
-              {apoConfigText}
-            </pre>
+        {/* 우측 5컬럼: GraphicEQ 실시간 미리보기 및 하단 클립보드 복사 버튼 배치 */}
+        <div className="md:col-span-5 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3 w-full">
+          <div className="text-[#161616] dark:text-[#f4f4f4] pb-2 border-b border-[#e0e0e0] dark:border-[#393939] font-bold text-xs flex items-center justify-between">
+            <span>Equalizer APO GraphicEQ 문법 미리보기</span>
+            <span className="text-[10px] text-[#8d8d8d] font-normal">Channel: L / R 분리</span>
+          </div>
+
+          <pre className="flex-1 min-h-[180px] max-h-[260px] overflow-y-auto whitespace-pre-wrap leading-tight p-2.5 carbon-subcard rounded-lg text-[#161616] dark:text-[#f4f4f4] font-mono text-[11px]">
+            {apoConfigText}
+          </pre>
+
+          {/* 문법 미리보기 텍스트박스 하단에 배치된 전체 문법 클립보드 복사 버튼 */}
+          <div className="pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex items-center justify-between text-xs">
+            <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
+              전체 텍스트 복사 후 config에 붙여넣기
+            </span>
+            <button
+              onClick={handleCopyClipboard}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded font-semibold text-xs bg-[#0f62fe] hover:bg-[#0353e9] text-white shadow-xs transition-all duration-150 cursor-pointer"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? '복사 완료!' : '전체 문법 클립보드 복사'}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -379,59 +384,50 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               </button>
             </div>
 
-            {/* 단계별 정확한 가이드 (Instant mode 및 Include 상세 반영) */}
+            {/* 단계별 깔끔한 가이드 (중복 제거 및 Instant mode 핵심 반영) */}
             <div className="space-y-3 text-xs text-[#525252] dark:text-[#c6c6c6] leading-relaxed max-h-[65vh] overflow-y-auto pr-1">
-              <div className="p-3 bg-[#edf5ff] dark:bg-[#002d9c]/30 rounded-lg border border-[#d0e2ff] dark:border-[#0043ce] flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-[#0f62fe] flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-[#002d9c] dark:text-[#78a9ff]">
-                  Equalizer APO에 보정 값을 반영하는 공식적이고 가장 정확한 3단계 순서입니다.
-                </span>
-              </div>
-
               {/* 3단계 상세 순서 */}
-              <div className="p-3 carbon-subcard rounded-lg space-y-2.5">
-                <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
-                  <span>Equalizer APO 설정 파일 반영 순서</span>
+              <div className="space-y-2 text-xs">
+                <div className="p-2.5 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1 shadow-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-[#161616] dark:text-[#f4f4f4]">
+                    <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
+                    <span>1단계: 보정 파일 저장 및 config 폴더로 이동</span>
+                  </div>
+                  <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                    화면의 <strong>[설정 파일 다운로드]</strong> 버튼을 눌러 .txt 파일을 내려받은 뒤, <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동합니다.
+                  </p>
                 </div>
-                
-                <div className="space-y-2 text-xs">
-                  <div className="p-2 rounded bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1">
-                    <strong className="text-[#161616] dark:text-[#f4f4f4]">1단계: 보정 파일 저장 및 이동</strong>
-                    <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                      화면의 <strong>[설정 파일 다운로드]</strong> 버튼을 눌러 .txt 파일을 내려받은 뒤, <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동합니다.
-                    </p>
-                  </div>
 
-                  <div className="p-2 rounded bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
-                      <span>★ 2단계: Configuration Editor 실행 및 Instant mode 켜기 (핵심)</span>
-                    </div>
-                    <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-tight">
-                      시작 메뉴에서 <strong>Configuration Editor</strong>를 실행한 뒤, <strong>창 상단 툴바의 [Instant mode] 체크박스에 체크(V)</strong>가 되어 있는지 반드시 확인하세요!
-                    </p>
-                    <p className="text-[10px] text-amber-800 dark:text-amber-300">
-                      💡 Instant mode가 꺼져 있으면 파일을 불러오거나 저장해도 소리가 실시간으로 바뀌지 않습니다.
-                    </p>
+                <div className="p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1 shadow-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
+                    <span>★ 2단계: Configuration Editor 실행 및 Instant mode 켜기 (핵심)</span>
                   </div>
+                  <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-tight">
+                    시작 메뉴에서 <strong>Configuration Editor</strong>를 실행한 뒤, <strong>창 상단 툴바의 [Instant mode] 체크박스에 체크(V)</strong>가 되어 있는지 반드시 확인하세요!
+                  </p>
+                  <p className="text-[10px] text-amber-800 dark:text-amber-300">
+                    💡 Instant mode가 꺼져 있으면 파일을 불러오거나 저장해도 소리가 실시간으로 바뀌지 않습니다.
+                  </p>
+                </div>
 
-                  <div className="p-2 rounded bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1">
-                    <strong className="text-[#161616] dark:text-[#f4f4f4]">3단계: 보정 파일 불러오기 (Include)</strong>
-                    <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                      초록색 <strong>+</strong> 버튼 ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>를 누르고, 1단계에서 넣은 보정 파일을 선택하면 소리에 즉시 적용됩니다.<br />
-                      <span className="text-[10px] text-[#8d8d8d]">(또는 기본 config.txt의 내용을 지우고 내려받은 파일 내용을 그대로 붙여넣은 뒤 Ctrl+S 저장하셔도 됩니다.)</span>
-                    </p>
+                <div className="p-2.5 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1 shadow-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-[#161616] dark:text-[#f4f4f4]">
+                    <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
+                    <span>3단계: 보정 파일 불러오기 (Include)</span>
                   </div>
+                  <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                    초록색 <strong>+</strong> 버튼 ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>를 누르고, 1단계에서 넣은 보정 파일을 선택하면 소리에 즉시 적용됩니다.<br />
+                    <span className="text-[10px] text-[#8d8d8d]">(또는 기본 config.txt의 내용을 지우고 내려받은 파일 내용을 그대로 붙여넣은 뒤 Ctrl+S 저장하셔도 됩니다.)</span>
+                  </p>
                 </div>
               </div>
 
-              {/* 해결 및 점검 체크리스트 */}
-              <div className="p-3 bg-[#f4f4f4] dark:bg-[#262626] rounded-lg border border-[#e0e0e0] dark:border-[#393939] text-xs space-y-1.5">
+              {/* 해결 및 점검 체크리스트 (중복 제거) */}
+              <div className="p-3 bg-[#f4f4f4] dark:bg-[#262626] rounded-lg border border-[#e0e0e0] dark:border-[#393939] text-xs space-y-1.5 shadow-xs">
                 <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1">
-                  <span>💡 소리가 바뀌지 않거나 먹통일 때 점검 3가지</span>
+                  <span>💡 소리가 바뀌지 않거나 먹통일 때 점검 사항</span>
                 </div>
                 <ul className="text-[11px] text-[#525252] dark:text-[#c6c6c6] list-disc list-inside space-y-1">
-                  <li><strong>Instant mode 확인:</strong> Configuration Editor 상단 [Instant mode] 체크박스가 켜져 있는지 재확인</li>
                   <li><strong>장치 활성화 확인:</strong> 시작 메뉴에서 <strong>Configurator</strong> 실행 ➡️ `Playback devices`에서 현재 사용 중인 이어폰/헤드폰 장치에 체크(V)가 되어 있는지 확인 (최초 설치 시 윈도우 재부팅 필요)</li>
                   <li><strong>필터 전원 확인:</strong> 각 블록 좌측의 둥근 전원 아이콘(⭕)이 켜져 있는지 확인</li>
                 </ul>

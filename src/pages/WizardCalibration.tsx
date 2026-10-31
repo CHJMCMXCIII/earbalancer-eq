@@ -206,8 +206,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           <span>이전</span>
         </button>
 
-        {/* 31개 주파수 스텝 인디케이터 도트 (좌우 꽉 차게 균등 배치) */}
-        <div className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 overflow-x-auto py-1 px-1">
+        {/* 31개 주파수 대역 인터랙티브 내비게이션 바 (반응형으로 좌우 꽉 차고 클릭하기 편한 크기로 개편) */}
+        <div className="flex-1 flex items-center justify-between gap-0.5 sm:gap-1 py-1 px-1 min-w-0">
           {activeBandIndices.map((bIdx, idx) => {
             const isDone =
               calibrations[bIdx].leftDb !== 0 ||
@@ -219,13 +219,13 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               <button
                 key={bIdx}
                 onClick={() => handleStepChange(idx)}
-                title={`${FREQUENCY_BANDS[bIdx].label} (${FREQUENCY_BANDS[bIdx].freq}Hz)`}
-                className={`h-2 sm:h-2.5 rounded-full transition-all duration-150 cursor-pointer flex-shrink-0 ${
+                title={`${FREQUENCY_BANDS[bIdx].label} (${FREQUENCY_BANDS[bIdx].freq}Hz)${isDone ? ' [보정됨]' : ''}`}
+                className={`flex-1 h-5 sm:h-6 min-w-[5px] sm:min-w-[8px] rounded-xs sm:rounded-sm transition-all duration-150 cursor-pointer relative ${
                   isCurrent
-                    ? 'w-5 sm:w-6 bg-[#0f62fe]'
+                    ? 'bg-[#0f62fe] ring-2 ring-[#0f62fe]/50 scale-y-110 z-10 shadow-xs'
                     : isDone
-                    ? 'w-2 sm:w-2.5 bg-emerald-500'
-                    : 'w-2 sm:w-2.5 bg-[#c6c6c6] dark:bg-[#525252] hover:bg-[#8d8d8d]'
+                    ? 'bg-emerald-500 hover:bg-emerald-600'
+                    : 'bg-[#d0d0d0] dark:bg-[#393939] hover:bg-[#8d8d8d] dark:hover:bg-[#525252]'
                 }`}
               />
             );

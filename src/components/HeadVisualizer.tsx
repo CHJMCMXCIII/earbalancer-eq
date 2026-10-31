@@ -27,17 +27,21 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   const diffDb = Number((rightDb - leftDb).toFixed(1));
   const isBalanced = Math.abs(diffDb) < 0.2;
 
-  const leftWaveOffset = leftDb * 2.5;
-  const rightWaveOffset = rightDb * 2.5;
+  // 좌/우 파동 변위 이동 거리 대폭 확대 (더 두드러진 시각적 피드백 제공)
+  const leftWaveMove = leftDb * 2.0;
+  const rightWaveMove = rightDb * 2.0;
+
+  // 소리 중심점(음상) 좌우 이동 거리 (diffDb에 따라 두상 내부에서 ±32px까지 두드러지게 이동)
+  const soundCenterShift = Math.max(-32, Math.min(32, diffDb * 2.8));
 
   return (
     <div className="relative flex flex-col items-center justify-between p-4 carbon-card rounded-xl shadow-xs overflow-hidden h-full">
-      {/* 상단 밸런스 상태 텍스트 (최소 12px) */}
+      {/* 상단 밸런스 상태 텍스트 (사용자 친화적 용어로 변경) */}
       <div className="w-full flex items-center justify-between text-xs sm:text-sm text-[#525252] dark:text-[#c6c6c6] z-10 pb-1.5">
         <div className="flex items-center gap-1.5 font-medium">
           <Radio className="w-4 h-4 text-[#0f62fe]" />
           <span className="font-semibold text-xs sm:text-sm text-[#161616] dark:text-[#f4f4f4]">
-            중심 음파 방사 가이드
+            소리 위치 가이드
           </span>
         </div>
 
@@ -73,9 +77,12 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             strokeWidth="1"
           />
 
-          {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 (IBM Carbon Blue & Gray) */}
+          {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 (IBM Carbon Blue & Gray, 소리 위치 이동 반영) */}
           {isPlaying && (
-            <g transform="translate(160, 105)">
+            <g
+              transform={`translate(${160 + soundCenterShift}, 105)`}
+              style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
+            >
               <circle
                 cx="0"
                 cy="0"
@@ -109,9 +116,9 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             </g>
           )}
 
-          {/* 2. 좌측 귀 개인화 독립 음파 (L) */}
+          {/* 2. 좌측 귀 개인화 독립 음파 (L) - 이동 거리 2.0px/dB로 확대 */}
           <g
-            transform={`translate(${108 - leftWaveOffset * 0.4}, 105)`}
+            transform={`translate(${108 - leftWaveMove}, 105)`}
             style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
           >
             <path
@@ -139,9 +146,9 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             />
           </g>
 
-          {/* 3. 우측 귀 개인화 독립 음파 (R) */}
+          {/* 3. 우측 귀 개인화 독립 음파 (R) - 이동 거리 2.0px/dB로 확대 */}
           <g
-            transform={`translate(${212 + rightWaveOffset * 0.4}, 105)`}
+            transform={`translate(${212 + rightWaveMove}, 105)`}
             style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
           >
             <path
@@ -242,7 +249,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               R
             </text>
 
-            {/* 머리 중심 타깃 링 */}
+            {/* 머리 중심 타깃 링 (기준선) */}
             <circle
               cx="0"
               cy="0"
@@ -254,16 +261,21 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               strokeDasharray="2 2"
             />
 
-            {/* 머리 중심 발원 코어 */}
-            <circle
-              cx="0"
-              cy="0"
-              r={isBalanced ? 10 : 8}
-              fill={isBalanced ? '#198038' : '#0f62fe'}
-              opacity={isPlaying ? 0.95 : 0.4}
-              className={isPlaying ? 'animate-pulse' : ''}
-            />
-            <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
+            {/* 머리 중심 발원 코어 (소리 크기 편향에 따라 좌우로 두드러지게 이동) */}
+            <g
+              transform={`translate(${soundCenterShift}, 0)`}
+              style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
+            >
+              <circle
+                cx="0"
+                cy="0"
+                r={isBalanced ? 10 : 8}
+                fill={isBalanced ? '#198038' : '#0f62fe'}
+                opacity={isPlaying ? 0.95 : 0.6}
+                className={isPlaying ? 'animate-pulse' : ''}
+              />
+              <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
+            </g>
           </g>
         </svg>
       </div>
