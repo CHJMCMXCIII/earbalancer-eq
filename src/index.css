@@ -1,36 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  color-scheme: light dark;
-}
-
-html.dark {
-  color-scheme: dark;
-}
-
-html:not(.dark) {
   color-scheme: light;
+  --cds-bg: #f4f4f4;
+  --cds-card: #ffffff;
+  --cds-subcard: #f4f4f4;
+  --cds-border: #e0e0e0;
+  --cds-border-strong: #8d8d8d;
+  --cds-text-primary: #161616;
+  --cds-text-secondary: #525252;
+  --cds-text-helper: #6f6f6f;
+  --cds-interactive: #0f62fe;
+  --cds-interactive-hover: #0353e9;
+  font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* 다크 모드 음향 그래픽 패턴 (Acoustic Studio Pattern - Dark) */
+html.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --cds-bg: #161616;
+  --cds-card: #262626;
+  --cds-subcard: #161616;
+  --cds-border: #393939;
+  --cds-border-strong: #6f6f6f;
+  --cds-text-primary: #f4f4f4;
+  --cds-text-secondary: #c6c6c6;
+  --cds-text-helper: #8d8d8d;
+  --cds-interactive: #0f62fe;
+  --cds-interactive-hover: #0043ce;
+}
+
+/* IBM Carbon Design System Card Components */
+.carbon-card {
+  background-color: var(--cds-card);
+  border: 1px solid var(--cds-border);
+  color: var(--cds-text-primary);
+  transition: background-color 150ms cubic-bezier(0.2, 0, 0.38, 0.9),
+              border-color 150ms cubic-bezier(0.2, 0, 0.38, 0.9),
+              color 150ms cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+.carbon-subcard {
+  background-color: var(--cds-subcard);
+  border: 1px solid var(--cds-border);
+  color: var(--cds-text-primary);
+  transition: background-color 150ms cubic-bezier(0.2, 0, 0.38, 0.9),
+              border-color 150ms cubic-bezier(0.2, 0, 0.38, 0.9),
+              color 150ms cubic-bezier(0.2, 0, 0.38, 0.9);
+}
+
+/* 다크 모드 음향 그래픽 패턴 (IBM Carbon Dark - Gray 100) */
 .acoustic-pattern-dark {
-  background-color: #09090b;
+  background-color: #161616;
   background-image: 
-    radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.12) 0px, transparent 45%),
-    radial-gradient(at 85% 85%, rgba(168, 85, 247, 0.09) 0px, transparent 45%),
-    radial-gradient(#27272a 1.2px, transparent 1.2px);
+    radial-gradient(at 15% 15%, rgba(15, 98, 254, 0.12) 0px, transparent 45%),
+    radial-gradient(at 85% 85%, rgba(168, 85, 247, 0.08) 0px, transparent 45%),
+    radial-gradient(#262626 1.2px, transparent 1.2px);
   background-size: 100% 100%, 100% 100%, 20px 20px;
 }
 
-/* 라이트 모드 음향 그래픽 패턴 (Acoustic Studio Pattern - Light) */
+/* 라이트 모드 음향 그래픽 패턴 (IBM Carbon Light - Gray 10) */
 .acoustic-pattern-light {
-  background-color: #f4f4f5;
+  background-color: #f4f4f4;
   background-image: 
-    radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.08) 0px, transparent 45%),
-    radial-gradient(at 85% 85%, rgba(147, 51, 234, 0.06) 0px, transparent 45%),
-    radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+    radial-gradient(at 15% 15%, rgba(15, 98, 254, 0.08) 0px, transparent 45%),
+    radial-gradient(at 85% 85%, rgba(147, 51, 234, 0.05) 0px, transparent 45%),
+    radial-gradient(#d0d0d0 1.2px, transparent 1.2px);
   background-size: 100% 100%, 100% 100%, 20px 20px;
 }
 
@@ -45,10 +84,10 @@ html:not(.dark) {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #71717a;
+  background: #8d8d8d;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
+  background: #525252;
 }
