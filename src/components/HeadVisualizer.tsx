@@ -266,12 +266,6 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
           </g>
         </svg>
-
-        {phaseInvert && (
-          <div className="absolute bottom-0 bg-purple-100 dark:bg-purple-950/90 text-purple-700 dark:text-purple-200 border border-purple-300 dark:border-purple-600 text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-xs">
-            180° 위상 반전 적용됨
-          </div>
-        )}
       </div>
 
       {/* 하단 주파수 대역 표시 박스 (10~12px) */}

@@ -2,7 +2,7 @@
 
 export interface APOExportOptions {
   profileName: string;
-  bands: { freq: number; leftDb: number; rightDb: number; phaseInvert?: boolean }[];
+  bands: { freq: number; leftDb: number; rightDb: number }[];
   preampDb?: number;
 }
 
@@ -21,7 +21,7 @@ export function generateAPOConfigText(options: APOExportOptions): string {
     `# 생성일시: ${dateStr}`,
     `# ===================================================`,
     ``,
-    `# [안전 장치] 디지털 클리핑 방지를 위한 Preamp (기본 -3dB 권장)`,
+    `# [안전 장치] 디지털 클리핑 방지를 위한 Preamp`,
     `Preamp: ${preampDb.toFixed(1)} dB`,
     ``,
     `# ---------------------------------------------------`,
@@ -43,14 +43,6 @@ export function generateAPOConfigText(options: APOExportOptions): string {
   const rightPairs = bands.map((b) => `${b.freq} ${b.rightDb.toFixed(1)}`).join('; ');
   lines.push(`GraphicEQ: ${rightPairs}`);
   lines.push(``);
-
-  // 위상 반전이 켜져 있는 채널이 있는 경우
-  const hasPhaseInvert = bands.some((b) => b.phaseInvert);
-  if (hasPhaseInvert) {
-    lines.push(`# [위상 조정 설정]`);
-    lines.push(`Copy: R=-1*R`);
-    lines.push(``);
-  }
 
   lines.push(`# EarBalancer EQ 보정 완료 - 청력 맞춤 사운드를 즐기세요!`);
 

@@ -58,7 +58,6 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     freq: b.freq,
     leftDb: calibrations[i]?.leftDb || 0,
     rightDb: calibrations[i]?.rightDb || 0,
-    phaseInvert: calibrations[i]?.phaseInvert || false,
   }));
 
   const apoConfigText = generateAPOConfigText({
@@ -380,32 +379,62 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               </button>
             </div>
 
-            {/* 단계별 쉬운 가이드 */}
-            <div className="space-y-3 text-xs text-[#525252] dark:text-[#c6c6c6] leading-relaxed max-h-[60vh] overflow-y-auto pr-1">
+            {/* 단계별 정확한 가이드 (Instant mode 및 Include 상세 반영) */}
+            <div className="space-y-3 text-xs text-[#525252] dark:text-[#c6c6c6] leading-relaxed max-h-[65vh] overflow-y-auto pr-1">
               <div className="p-3 bg-[#edf5ff] dark:bg-[#002d9c]/30 rounded-lg border border-[#d0e2ff] dark:border-[#0043ce] flex items-start gap-2.5">
                 <Info className="w-4 h-4 text-[#0f62fe] flex-shrink-0 mt-0.5" />
                 <span className="text-xs text-[#002d9c] dark:text-[#78a9ff]">
-                  Equalizer APO는 윈도우의 사운드를 주파수별로 실시간 보정해주는 무료 프로그램입니다. 아래 순서대로 적용해주세요!
+                  Equalizer APO에 보정 값을 반영하는 공식적이고 가장 정확한 3단계 순서입니다.
                 </span>
               </div>
 
-              {/* 설정 파일 적용 순서 */}
-              <div className="p-3 carbon-subcard rounded-lg space-y-2">
+              {/* 3단계 상세 순서 */}
+              <div className="p-3 carbon-subcard rounded-lg space-y-2.5">
                 <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
                   <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
-                  <span>설정 파일 반영 방법 (3단계)</span>
+                  <span>Equalizer APO 설정 파일 반영 순서</span>
                 </div>
-                <ol className="text-xs text-[#525252] dark:text-[#c6c6c6] list-decimal list-inside space-y-1.5 pl-1">
-                  <li><strong>[설정 파일 다운로드]</strong> 버튼을 눌러 보정 파일(.txt)을 내려받습니다.</li>
-                  <li>다운로드한 파일을 <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동합니다.</li>
-                  <li>시작 메뉴에서 <strong>Configuration Editor</strong>를 실행한 뒤, 초록색 <strong>+</strong> ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>에서 해당 파일을 불러오거나, 기존 <strong>config.txt</strong>에 내용을 붙여넣으시면 시스템 사운드에 즉시 적용됩니다.</li>
-                </ol>
+                
+                <div className="space-y-2 text-xs">
+                  <div className="p-2 rounded bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1">
+                    <strong className="text-[#161616] dark:text-[#f4f4f4]">1단계: 보정 파일 저장 및 이동</strong>
+                    <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                      화면의 <strong>[설정 파일 다운로드]</strong> 버튼을 눌러 .txt 파일을 내려받은 뒤, <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동합니다.
+                    </p>
+                  </div>
+
+                  <div className="p-2 rounded bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
+                      <span>★ 2단계: Configuration Editor 실행 및 Instant mode 켜기 (핵심)</span>
+                    </div>
+                    <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-tight">
+                      시작 메뉴에서 <strong>Configuration Editor</strong>를 실행한 뒤, <strong>창 상단 툴바의 [Instant mode] 체크박스에 체크(V)</strong>가 되어 있는지 반드시 확인하세요!
+                    </p>
+                    <p className="text-[10px] text-amber-800 dark:text-amber-300">
+                      💡 Instant mode가 꺼져 있으면 파일을 불러오거나 저장해도 소리가 실시간으로 바뀌지 않습니다.
+                    </p>
+                  </div>
+
+                  <div className="p-2 rounded bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1">
+                    <strong className="text-[#161616] dark:text-[#f4f4f4]">3단계: 보정 파일 불러오기 (Include)</strong>
+                    <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                      초록색 <strong>+</strong> 버튼 ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>를 누르고, 1단계에서 넣은 보정 파일을 선택하면 소리에 즉시 적용됩니다.<br />
+                      <span className="text-[10px] text-[#8d8d8d]">(또는 기본 config.txt의 내용을 지우고 내려받은 파일 내용을 그대로 붙여넣은 뒤 Ctrl+S 저장하셔도 됩니다.)</span>
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* 해결 팁 */}
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900/60 text-xs text-amber-900 dark:text-amber-200">
-                💡 <strong>소리가 바뀌지 않나요?</strong><br />
-                시작 메뉴에서 <strong>Configurator</strong>를 검색하여 실행한 뒤, 현재 사용 중인 헤드폰/스피커 장치에 체크 표시(V)가 되어 있는지 확인해주세요.
+              {/* 해결 및 점검 체크리스트 */}
+              <div className="p-3 bg-[#f4f4f4] dark:bg-[#262626] rounded-lg border border-[#e0e0e0] dark:border-[#393939] text-xs space-y-1.5">
+                <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1">
+                  <span>💡 소리가 바뀌지 않거나 먹통일 때 점검 3가지</span>
+                </div>
+                <ul className="text-[11px] text-[#525252] dark:text-[#c6c6c6] list-disc list-inside space-y-1">
+                  <li><strong>Instant mode 확인:</strong> Configuration Editor 상단 [Instant mode] 체크박스가 켜져 있는지 재확인</li>
+                  <li><strong>장치 활성화 확인:</strong> 시작 메뉴에서 <strong>Configurator</strong> 실행 ➡️ `Playback devices`에서 현재 사용 중인 이어폰/헤드폰 장치에 체크(V)가 되어 있는지 확인 (최초 설치 시 윈도우 재부팅 필요)</li>
+                  <li><strong>필터 전원 확인:</strong> 각 블록 좌측의 둥근 전원 아이콘(⭕)이 켜져 있는지 확인</li>
+                </ul>
               </div>
             </div>
 

@@ -14,7 +14,6 @@ import {
   Lock,
   ArrowRight,
   ArrowLeftRight,
-  Activity,
   Info,
 } from 'lucide-react';
 
@@ -397,36 +396,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             </button>
           </div>
 
-          {/* 보조 기능 2: 위상(Phase) 180° 반전 (i 아이콘 툴팁 추가 & 고정 너비) */}
-          <div className="p-2.5 carbon-subcard rounded-lg flex items-center justify-between gap-2.5 text-xs">
-            <div className="space-y-0.5">
-              <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs">
-                <Activity className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>소리가 머리 밖으로 흩어질 때: 위상(Phase) 반전</span>
-                <div className="relative group/tip inline-flex items-center">
-                  <Info className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
-                    <strong>위상(Phase) 180° 반전이란?</strong><br />
-                    소리가 머리 정중앙에 맺히지 않고 귀 바깥으로 흩어지거나 귓속이 텅 빈 것처럼 멍멍할 때 켜보세요. 180도 위상을 뒤집어 소리를 정중앙으로 모아줍니다.
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
-                  </div>
-                </div>
-              </div>
-              <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-                소리가 중심에 맺히지 않고 귓속이 텅 빈 것처럼 흩어질 때 켜면 180도 위상을 뒤집어 소리를 모아줍니다
-              </div>
-            </div>
-            <button
-              onClick={handleTogglePhase}
-              className={`flex-shrink-0 w-36 min-w-[144px] text-center px-3 py-1.5 rounded text-xs font-semibold border transition-all duration-150 cursor-pointer shadow-xs ${
-                currentBandCalib.phaseInvert
-                  ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600 font-bold'
-                  : 'bg-white hover:bg-[#e8e8e8] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border-[#e0e0e0] dark:border-[#525252]'
-              }`}
-            >
-              {currentBandCalib.phaseInvert ? '위상 반전 ON (180°)' : '위상 정상 (0°)'}
-            </button>
-          </div>
+          {/* 위상 반전 기능은 추후 기능에 대해 명확히 파악 후 추가할 예정으로 임시 숨김 처리 */}
         </div>
       </div>
     </div>
