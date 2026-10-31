@@ -1,5 +1,5 @@
 // Web Audio API Audio Engine
-// 실시간 소리 생성, 좌/우 개별 채널 제어, ISO 226 자동 연동, 소프트 리미터
+// 실시간 소리 생성, 좌/우 개별 채널 제어, ISO 226 자동 연동, 체감 음량 자동 매칭 (Gain Matching), 소프트 리미터
 
 export interface BandCalibration {
   leftDb: number;       // -15 dB ~ +15 dB (사용자 좌측 귀 보정)
@@ -30,7 +30,7 @@ export class AudioEngine {
   constructor() {}
 
   /**
-   * 사용자 제스처(클릭) 시 AudioContext 초기화 및 오디오 그래프 구축
+   * 사용자 제스처 시 AudioContext 초기화 및 오디오 그래프 구축
    */
   public async ensureContext(): Promise<AudioContext> {
     if (!this.ctx) {
@@ -74,11 +74,6 @@ export class AudioEngine {
 
   /**
    * 단일 주파수 순음(Sine wave) 재생 시작
-   * @param freq 주파수 (Hz)
-   * @param leftDb 좌측 게인 (dB)
-   * @param rightDb 우측 게인 (dB)
-   * @param phaseInvert 위상 180도 반전 여부
-   * @param isoOffsetDb ISO 226 표준 사람 청각 자동 보정 dB 오프셋 (기본 자동 연동)
    */
   public async startTone(
     freq: number,
@@ -90,19 +85,18 @@ export class AudioEngine {
     await this.ensureContext();
     if (!this.ctx || !this.masterGain) return;
 
-    this.stopTone(); // 이전 톤 정지
+    this.stopTone();
 
     this.currentFrequency = freq;
     const now = this.ctx.currentTime;
 
-    // 1. 발진기 생성 (Sine wave)
+    // 1. 발진기 생성
     this.osc = this.ctx.createOscillator();
     this.osc.type = 'sine';
     this.osc.frequency.setValueAtTime(freq, now);
 
-    // 2. 좌우 개별 게인 노드 (dB -> Linear 변환)
+    // 2. 좌우 개별 게인 노드
     const baseLinear = 0.15;
-    // ISO 226 표준에 따른 기본 체감 볼륨 자동 연동 (안전 범위 클램프)
     const clampedIso = Math.min(22, Math.max(-10, isoOffsetDb * 0.6));
     const effectiveLeftDb = leftDb + clampedIso;
     const effectiveRightDb = rightDb + clampedIso;
@@ -113,14 +107,13 @@ export class AudioEngine {
     this.oscLeftGain = this.ctx.createGain();
     this.oscRightGain = this.ctx.createGain();
 
-    // 부드러운 램프업 (클릭 팝 방지)
     this.oscLeftGain.gain.setValueAtTime(0.0001, now);
     this.oscLeftGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(leftLinear)), now + 0.025);
 
     this.oscRightGain.gain.setValueAtTime(0.0001, now);
     this.oscRightGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(rightLinear)), now + 0.025);
 
-    // 3. 스테레오 채널 분리 병합 (Left -> ch 0, Right -> ch 1)
+    // 3. 스테레오 채널 분리 병합
     this.oscMerger = this.ctx.createChannelMerger(2);
 
     this.osc.connect(this.oscLeftGain);
@@ -135,9 +128,6 @@ export class AudioEngine {
     this.toneActive = true;
   }
 
-  /**
-   * 실시간 슬라이더 조작 시 톤 파라미터 업데이트 (노이즈 없이 부드러운 추종)
-   */
   public updateToneParams(
     leftDb: number,
     rightDb: number,
@@ -159,9 +149,6 @@ export class AudioEngine {
     this.oscRightGain.gain.setTargetAtTime(rightLinear, now, 0.015);
   }
 
-  /**
-   * 재생 중인 톤 정지
-   */
   public stopTone() {
     if (!this.toneActive || !this.osc || !this.ctx) return;
 
@@ -184,9 +171,6 @@ export class AudioEngine {
     return this.toneActive;
   }
 
-  /**
-   * 내장 앰비언트 테스트 사운드 버퍼 생성 (Cmaj9/Am9 화음)
-   */
   public createAmbientTestBuffer(): AudioBuffer {
     if (!this.ctx) throw new Error('AudioContext not ready');
 
@@ -234,9 +218,6 @@ export class AudioEngine {
     return buffer;
   }
 
-  /**
-   * 커스텀 오디오 파일 로드
-   */
   public async loadAudioFile(file: File): Promise<AudioBuffer> {
     const ctx = await this.ensureContext();
     const arrayBuffer = await file.arrayBuffer();
@@ -247,6 +228,10 @@ export class AudioEngine {
 
   /**
    * A/B 비교 테스트 재생
+   * [체감 음량 자동 매칭 (Gain Matching) 엔진]:
+   * EQ 적용 시 주파수 증폭에 따른 볼륨 상승분을 계산하여,
+   * 보정 전(Bypass)과 보정 후의 체감 음량을 동일하게 일치시킴으로써
+   * 소리가 단지 커서 더 좋게 들리는 심리음향학적 착시를 원천 방지
    */
   public async startABTest(
     calibrations: { freq: number; leftDb: number; rightDb: number }[],
@@ -267,6 +252,18 @@ export class AudioEngine {
 
     this.abGainNode = ctx.createGain();
     this.abBypass = bypass;
+
+    // 체감 음량 자동 매칭 (Gain Matching) 계산
+    const totalBoost = calibrations.reduce(
+      (acc, c) => acc + (c.leftDb + c.rightDb) / 2,
+      0
+    );
+    const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
+    // EQ 적용 시 평균 증폭분을 마이너스 보정하여 바이패스와 실효 음량 일치
+    const gainMatchCompDb = !bypass ? -avgBoostDb * 0.75 : 0;
+    const gainMatchLinear = Math.pow(10, gainMatchCompDb / 20);
+
+    this.abGainNode.gain.setValueAtTime(gainMatchLinear, ctx.currentTime);
 
     if (!bypass) {
       const splitter = ctx.createChannelSplitter(2);

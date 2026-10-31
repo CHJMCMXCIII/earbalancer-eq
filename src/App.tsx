@@ -24,7 +24,8 @@ export function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('earbalancer_theme');
-      return saved ? saved === 'dark' : true;
+      if (saved) return saved === 'dark';
+      return true; // 기본 다크 모드
     } catch {
       return true;
     }
@@ -32,11 +33,14 @@ export function App() {
 
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
     if (isDarkMode) {
       root.classList.add('dark');
+      body.classList.add('dark');
       localStorage.setItem('earbalancer_theme', 'dark');
     } else {
       root.classList.remove('dark');
+      body.classList.remove('dark');
       localStorage.setItem('earbalancer_theme', 'light');
     }
   }, [isDarkMode]);
@@ -51,7 +55,7 @@ export function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col justify-start select-none font-sans transition-colors duration-200 ${isDarkMode ? 'dark' : ''}`}>
+    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col justify-start select-none font-sans transition-colors duration-200">
       {/* 1. 상단 글로벌 헤더 */}
       <header className="flex-shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-2 shadow-xs z-30 transition-colors">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
@@ -117,7 +121,7 @@ export function App() {
             <button
               onClick={toggleTheme}
               title={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
-              className="p-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors"
+              className="p-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
             >
               {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-zinc-700" />}
             </button>
@@ -143,7 +147,7 @@ export function App() {
         </div>
       </header>
 
-      {/* 2. 메인 컨텐츠 영역 (화면이 길 때 상하로 벌어지지 않도록 위로 정렬: justify-start) */}
+      {/* 2. 메인 컨텐츠 영역 (상단 정렬: justify-start) */}
       <main className="flex-1 p-3.5 max-w-5xl w-full mx-auto flex flex-col justify-start items-stretch gap-3">
         {activeTab === 'calibrate' && (
           <WizardCalibration

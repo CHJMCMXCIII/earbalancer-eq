@@ -240,7 +240,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           )}
         </div>
 
-        {/* 모드 선택 & 자동 채우기 */}
+        {/* 10단계 간편 모드 시에만 노출되는 '한 번에 채우기' (토글 좌측에 배치) & 모드 토글 */}
         <div className="flex items-center gap-2">
           {interpNotice && (
             <span className="text-emerald-600 dark:text-emerald-400 text-[11px] font-medium hidden sm:inline">
@@ -248,6 +248,19 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             </span>
           )}
 
+          {/* 10단계 간편 모드 활성화 시에만 토글 좌측에 노출 */}
+          {mode === '10-band' && (
+            <button
+              onClick={handleInterpolateAll}
+              title="10개 주파수 값을 바탕으로 31개 전체 대역을 보간합니다"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-blue-700 dark:text-zinc-100 rounded-lg border border-blue-200 dark:border-zinc-700 transition-colors shadow-xs"
+            >
+              <Wand2 className="w-3.5 h-3.5 text-blue-500" />
+              <span>한 번에 채우기</span>
+            </button>
+          )}
+
+          {/* 10단계 / 31단계 모드 토글 */}
           <div className="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800">
             <button
               onClick={() => {
@@ -276,22 +289,13 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               31단계 정밀
             </button>
           </div>
-
-          <button
-            onClick={handleInterpolateAll}
-            title="10개 주파수 값을 바탕으로 31개 전체 대역을 보간합니다"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors"
-          >
-            <Wand2 className="w-3.5 h-3.5 text-blue-500" />
-            <span className="hidden sm:inline">한 번에 채우기</span>
-          </button>
         </div>
       </div>
 
-      {/* 2. 메인 2컬럼 레이아웃 (상단 정렬: 요소가 상하로 벌어지지 않음) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-        {/* 좌측 5컬럼: 머리 중심 방사형 음파 시각 가이드 */}
-        <div className="md:col-span-5 w-full">
+      {/* 2. 메인 2컬럼 레이아웃 (items-stretch: 긴 쪽 길이로 맞추고, 짧은 쪽은 상-하로 퍼지도록 justify-between) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch w-full">
+        {/* 좌측 5컬럼: 머리 중심 방사형 음파 시각 가이드 (h-full & justify-between) */}
+        <div className="md:col-span-5 h-full w-full">
           <HeadVisualizer
             leftDb={currentBandCalib.leftDb}
             rightDb={currentBandCalib.rightDb}
@@ -301,8 +305,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           />
         </div>
 
-        {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 ISO 226 자동 연동 패널 */}
-        <div className="md:col-span-7 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl flex flex-col justify-start gap-3 transition-colors">
+        {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 ISO 226 자동 연동 패널 (h-full & justify-between) */}
+        <div className="md:col-span-7 h-full p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl flex flex-col justify-between gap-3 transition-colors">
           {/* 소리 듣기/멈추기 & 리셋 */}
           <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
             <button

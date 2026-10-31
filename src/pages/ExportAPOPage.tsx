@@ -90,7 +90,6 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     downloadAPOConfigFile(filename, apoConfigText);
   };
 
-  // 클립보드 복사
   const handleCopyClipboard = async () => {
     try {
       await navigator.clipboard.writeText(apoConfigText);
@@ -138,14 +137,19 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
 
   return (
     <div className="flex flex-col justify-start items-stretch gap-3 w-full">
-      {/* 상단 타이틀 바 */}
-      <div className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs transition-colors">
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-            Equalizer APO 연동 및 설정 내보내기
-          </span>
-        </div>
+      {/* 1. 최상단으로 이동한 내비게이션 바 */}
+      <div className="flex items-center justify-between p-2.5 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs transition-colors">
+        <button
+          onClick={onBackToABTest}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>이전 (A/B 테스트로)</span>
+        </button>
+
+        <span className="text-[11px] text-zinc-500 font-medium hidden sm:inline">
+          모든 캘리브레이션이 완료되었습니다. Equalizer APO에 저장하세요!
+        </span>
 
         {/* Equalizer APO 앱 공식 설치 링크 버튼 */}
         <a
@@ -166,10 +170,10 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
         </div>
       )}
 
-      {/* 메인 2컬럼 레이아웃 (상단 정렬) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+      {/* 2. 메인 2컬럼 레이아웃 (items-stretch: 긴 쪽 길이로 맞추고, 짧은 카드는 상-하로 퍼지도록 flex-col justify-between) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch w-full">
         {/* 좌측 7컬럼: 연동 옵션 (자동 반영 vs 파일 다운로드) */}
-        <div className="md:col-span-7 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl flex flex-col justify-start gap-3 transition-colors">
+        <div className="md:col-span-7 h-full p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl flex flex-col justify-between gap-3 transition-colors">
           {/* 프로필 이름 및 Preamp 안전 설정 */}
           <div className="grid grid-cols-2 gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
             <div>
@@ -211,7 +215,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           </div>
 
           {/* 이원화 옵션 카드: 옵션 1 (자동 반영) vs 옵션 2 (다운로드) */}
-          <div className="space-y-2">
+          <div className="space-y-2.5 my-auto">
             {/* 옵션 1: 자동 반영하기 */}
             <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 transition-colors">
               <div className="space-y-0.5">
@@ -256,7 +260,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           </div>
 
           {/* 클립보드 복사 바 */}
-          <div className="flex items-center justify-between pt-1 text-xs">
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs">
             <span className="text-[11px] text-zinc-500">
               Equalizer APO 규격: GraphicEQ (Channel: L / R 개별 분리)
             </span>
@@ -270,8 +274,8 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           </div>
         </div>
 
-        {/* 우측 5컬럼: 프로필 목록 & GraphicEQ 실시간 텍스트 미리보기 */}
-        <div className="md:col-span-5 flex flex-col justify-start gap-3 w-full">
+        {/* 우측 5컬럼: 프로필 목록 & GraphicEQ 실시간 미리보기 (h-full & justify-between) */}
+        <div className="md:col-span-5 h-full flex flex-col justify-between gap-3 w-full">
           {/* 내 프로필 목록 */}
           <div className="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-2 transition-colors">
             <div className="flex items-center justify-between text-xs font-semibold text-zinc-800 dark:text-zinc-300">
@@ -300,31 +304,16 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             </div>
           </div>
 
-          {/* GraphicEQ 미리보기 */}
-          <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 font-mono text-[10px] text-zinc-600 dark:text-zinc-400 flex flex-col transition-colors">
+          {/* GraphicEQ 미리보기 (flex-1로 채워짐) */}
+          <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 font-mono text-[10px] text-zinc-600 dark:text-zinc-400 flex-1 flex flex-col justify-between transition-colors">
             <div className="text-zinc-500 pb-1 border-b border-zinc-200 dark:border-zinc-800 font-bold">
               Equalizer APO GraphicEQ 문법 미리보기
             </div>
-            <pre className="max-h-24 overflow-y-auto whitespace-pre-wrap leading-tight my-1 text-zinc-700 dark:text-zinc-300">
+            <pre className="max-h-36 overflow-y-auto whitespace-pre-wrap leading-tight my-auto text-zinc-700 dark:text-zinc-300">
               {apoConfigText}
             </pre>
           </div>
         </div>
-      </div>
-
-      {/* 하단 뒤로 가기 */}
-      <div className="flex items-center justify-between p-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs transition-colors">
-        <button
-          onClick={onBackToABTest}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>이전 (A/B 테스트로)</span>
-        </button>
-
-        <span className="text-[11px] text-zinc-500">
-          모든 설정이 완료되었습니다. Equalizer APO에서 사운드를 즐기세요!
-        </span>
       </div>
     </div>
   );
