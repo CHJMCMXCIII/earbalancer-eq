@@ -17,22 +17,22 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   isPlaying,
   currentBand,
 }) => {
-  const leftAmp = Math.max(0.3, Math.min(2.2, 1.0 + leftDb / 10));
-  const rightAmp = Math.max(0.3, Math.min(2.2, 1.0 + rightDb / 10));
+  const leftAmp = Math.max(0.3, Math.min(2.0, 1.0 + leftDb / 12));
+  const rightAmp = Math.max(0.3, Math.min(2.0, 1.0 + rightDb / 12));
 
   const diffDb = Number((rightDb - leftDb).toFixed(1));
   const isBalanced = Math.abs(diffDb) < 0.2;
 
-  const leftWaveOffset = leftDb * 3;
-  const rightWaveOffset = rightDb * 3;
+  const leftWaveOffset = leftDb * 2.5;
+  const rightWaveOffset = rightDb * 2.5;
 
   return (
     <div className="relative flex flex-col items-center justify-between p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl overflow-hidden h-full transition-colors">
       {/* 상단 밸런스 상태 텍스트 */}
-      <div className="w-full flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 z-10 pb-1">
+      <div className="w-full flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 z-10 pb-1">
         <div className="flex items-center gap-1.5 font-medium">
           <Radio className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
-          <span className="text-zinc-800 dark:text-zinc-200 font-semibold text-[11px]">
+          <span className="font-semibold text-[11px]">
             중심 음파 방사 가이드
           </span>
         </div>
@@ -43,21 +43,21 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               <CheckCircle2 className="w-3 h-3" /> 양쪽 귀 균형 일치
             </span>
           ) : diffDb < 0 ? (
-            <span className="text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-[11px]">
+            <span className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-[11px]">
               왼쪽이 <strong className="text-blue-600 dark:text-blue-400">+{Math.abs(diffDb).toFixed(1)} dB</strong> 더 큼
             </span>
           ) : (
-            <span className="text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-[11px]">
+            <span className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-950 px-2 py-0.5 rounded-lg border border-zinc-300 dark:border-zinc-700 text-[11px]">
               오른쪽이 <strong className="text-blue-600 dark:text-blue-400">+{diffDb.toFixed(1)} dB</strong> 더 큼
             </span>
           )}
         </div>
       </div>
 
-      {/* 머리 중심 방사형 음파 일러스트레이션 (SVG) */}
+      {/* 미니멀한 얇은 선 두상 및 방사형 음파 일러스트레이션 (SVG) */}
       <div className="relative w-full max-w-[320px] h-44 flex items-center justify-center z-10 my-auto">
         <svg viewBox="0 0 320 180" className="w-full h-full">
-          {/* 중앙 수직 기준선 */}
+          {/* 중앙 수직 점선 기준선 */}
           <line
             x1="160"
             y1="10"
@@ -65,182 +65,197 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             y2="170"
             stroke="currentColor"
             className="text-zinc-300 dark:text-zinc-800"
-            strokeDasharray="3 3"
-            strokeWidth="1.5"
+            strokeDasharray="2 3"
+            strokeWidth="1"
           />
 
-          {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 */}
+          {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 (미니멀 얇은 선) */}
           {isPlaying && (
             <g transform="translate(160, 95)">
               <circle
                 cx="0"
                 cy="0"
-                r="18"
+                r="20"
                 fill="none"
                 stroke="currentColor"
                 className="text-zinc-400 dark:text-zinc-500 animate-ping opacity-60"
-                strokeWidth="1.5"
-                style={{ animationDuration: '1.2s' }}
+                strokeWidth="1"
+                style={{ animationDuration: '1.4s' }}
               />
               <circle
                 cx="0"
                 cy="0"
-                r="36"
+                r="40"
                 fill="none"
                 stroke="currentColor"
                 className="text-zinc-300 dark:text-zinc-600 animate-ping opacity-40"
-                strokeWidth="1.2"
-                style={{ animationDuration: '2.0s' }}
+                strokeWidth="0.8"
+                style={{ animationDuration: '2.2s' }}
               />
               <circle
                 cx="0"
                 cy="0"
-                r="56"
+                r="60"
                 fill="none"
                 stroke="currentColor"
-                className="text-zinc-200 dark:text-zinc-700 animate-ping opacity-20"
-                strokeWidth="1"
-                style={{ animationDuration: '2.8s' }}
+                className="text-zinc-200 dark:text-zinc-700 animate-ping opacity-25"
+                strokeWidth="0.6"
+                style={{ animationDuration: '3.0s' }}
               />
             </g>
           )}
 
-          {/* 2. 좌측 귀 개인화 독립 음파 */}
+          {/* 2. 좌측 귀 개인화 독립 음파 (L) */}
           <g
             transform={`translate(${108 - leftWaveOffset * 0.4}, 95)`}
             style={{ transition: 'transform 0.15s ease-out' }}
           >
             <path
-              d="M -5 -25 A 30 30 0 0 0 -5 25"
+              d="M -5 -24 A 28 28 0 0 0 -5 24"
               fill="none"
               stroke="#3b82f6"
-              strokeWidth={Math.max(1.5, 2 * leftAmp)}
+              strokeWidth={Math.max(1.2, 1.8 * leftAmp)}
               opacity={isPlaying ? 0.95 : 0.4}
               strokeLinecap="round"
             />
             <path
-              d="M -15 -35 A 44 44 0 0 0 -15 35"
+              d="M -15 -34 A 42 42 0 0 0 -15 34"
               fill="none"
               stroke="#60a5fa"
-              strokeWidth={Math.max(1, 1.5 * leftAmp)}
-              opacity={isPlaying ? 0.65 : 0.25}
+              strokeWidth={Math.max(0.8, 1.2 * leftAmp)}
+              opacity={isPlaying ? 0.7 : 0.25}
               strokeLinecap="round"
             />
             <circle
-              cx="-24"
+              cx="-22"
               cy="0"
-              r={Math.max(3, 4 * leftAmp)}
+              r={Math.max(2.5, 3.5 * leftAmp)}
               fill="#3b82f6"
               opacity={isPlaying ? 0.95 : 0.4}
             />
           </g>
 
-          {/* 3. 우측 귀 개인화 독립 음파 */}
+          {/* 3. 우측 귀 개인화 독립 음파 (R) */}
           <g
             transform={`translate(${212 + rightWaveOffset * 0.4}, 95)`}
             style={{ transition: 'transform 0.15s ease-out' }}
           >
             <path
-              d="M 5 -25 A 30 30 0 0 1 5 25"
+              d="M 5 -24 A 28 28 0 0 1 5 24"
               fill="none"
               stroke="#3b82f6"
-              strokeWidth={Math.max(1.5, 2 * rightAmp)}
+              strokeWidth={Math.max(1.2, 1.8 * rightAmp)}
               opacity={isPlaying ? 0.95 : 0.4}
               strokeLinecap="round"
             />
             <path
-              d="M 15 -35 A 44 44 0 0 1 15 35"
+              d="M 15 -34 A 42 42 0 0 1 15 34"
               fill="none"
               stroke="#60a5fa"
-              strokeWidth={Math.max(1, 1.5 * rightAmp)}
-              opacity={isPlaying ? 0.65 : 0.25}
+              strokeWidth={Math.max(0.8, 1.2 * rightAmp)}
+              opacity={isPlaying ? 0.7 : 0.25}
               strokeLinecap="round"
             />
             <circle
-              cx="24"
+              cx="22"
               cy="0"
-              r={Math.max(3, 4 * rightAmp)}
+              r={Math.max(2.5, 3.5 * rightAmp)}
               fill="#3b82f6"
               opacity={isPlaying ? 0.95 : 0.4}
             />
           </g>
 
-          {/* 4. 사람 머리 두상 (Light / Dark 지원) */}
+          {/* 4. 미니멀한 두상 (선 굵기 얇고 명확한 고대비) */}
           <g transform="translate(160, 95)">
+            {/* 코 (위쪽 시선) */}
             <path
-              d="M -6 -42 Q 0 -58 6 -42 Z"
-              className="fill-zinc-300 dark:fill-zinc-700 stroke-zinc-400 dark:stroke-zinc-600"
-              strokeWidth="1.5"
+              d="M -5 -43 Q 0 -56 5 -43 Z"
+              className="fill-zinc-200 dark:fill-zinc-800 stroke-zinc-500 dark:stroke-zinc-500"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
             />
+            {/* 두상 외곽선 */}
             <ellipse
               cx="0"
               cy="0"
-              rx="48"
-              ry="44"
-              className="fill-zinc-200 dark:fill-zinc-800 stroke-zinc-400 dark:stroke-zinc-600"
-              strokeWidth="2"
+              rx="47"
+              ry="43"
+              className="fill-zinc-50 dark:fill-zinc-900 stroke-zinc-600 dark:stroke-zinc-400"
+              strokeWidth="1.2"
             />
 
-            {/* 좌측 귀 */}
+            {/* 좌측 귀 (L) */}
             <rect
-              x="-56"
-              y="-12"
-              width="9"
-              height="24"
-              rx="4.5"
-              className="fill-zinc-300 dark:fill-zinc-700 stroke-zinc-400 dark:stroke-zinc-500"
-              strokeWidth="1.5"
+              x="-55"
+              y="-11"
+              width="8"
+              height="22"
+              rx="4"
+              className="fill-zinc-100 dark:fill-zinc-800 stroke-zinc-600 dark:stroke-zinc-400"
+              strokeWidth="1.2"
             />
             <text
-              x="-70"
+              x="-68"
               y="4"
-              className="fill-zinc-600 dark:fill-zinc-400 font-bold"
+              className="fill-zinc-800 dark:fill-zinc-200 font-bold"
               fontSize="10"
               textAnchor="middle"
             >
               L
             </text>
 
-            {/* 우측 귀 */}
+            {/* 우측 귀 (R) */}
             <rect
               x="47"
-              y="-12"
-              width="9"
-              height="24"
-              rx="4.5"
-              className="fill-zinc-300 dark:fill-zinc-700 stroke-zinc-400 dark:stroke-zinc-500"
-              strokeWidth="1.5"
+              y="-11"
+              width="8"
+              height="22"
+              rx="4"
+              className="fill-zinc-100 dark:fill-zinc-800 stroke-zinc-600 dark:stroke-zinc-400"
+              strokeWidth="1.2"
             />
             <text
-              x="70"
+              x="68"
               y="4"
-              className="fill-zinc-600 dark:fill-zinc-400 font-bold"
+              className="fill-zinc-800 dark:fill-zinc-200 font-bold"
               fontSize="10"
               textAnchor="middle"
             >
               R
             </text>
 
-            {/* 머리 중심 발원 코어 */}
+            {/* 머리 중심 타깃 링 */}
             <circle
               cx="0"
               cy="0"
-              r={isBalanced ? 12 : 9}
+              r="7"
+              fill="none"
+              stroke="currentColor"
+              className="text-zinc-400 dark:text-zinc-600"
+              strokeWidth="0.8"
+              strokeDasharray="2 2"
+            />
+
+            {/* 머리 중심 발원 코어 (명확한 색상 톤) */}
+            <circle
+              cx="0"
+              cy="0"
+              r={isBalanced ? 10 : 8}
               fill={isBalanced ? '#10b981' : '#3b82f6'}
-              opacity={isPlaying ? 0.85 : 0.35}
+              opacity={isPlaying ? 0.9 : 0.4}
               className={isPlaying ? 'animate-pulse' : ''}
             />
-            <circle cx="0" cy="0" r="3" fill="#ffffff" />
+            <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
 
             <text
               x="0"
-              y="-18"
-              className="fill-zinc-500 dark:fill-zinc-500"
-              fontSize="8"
+              y="-16"
+              className="fill-zinc-500 dark:fill-zinc-400 font-medium"
+              fontSize="7.5"
               textAnchor="middle"
-              letterSpacing="1"
+              letterSpacing="0.5"
             >
-              ▲ 정면 (모니터)
+              ▲ 정면
             </text>
           </g>
         </svg>
@@ -264,7 +279,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
           </span>
         </div>
 
-        <div className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate max-w-[170px] text-right">
+        <div className="text-[11px] text-zinc-700 dark:text-zinc-300 truncate max-w-[170px] text-right font-medium">
           {currentBand.description}
         </div>
       </div>

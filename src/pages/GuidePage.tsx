@@ -1,12 +1,8 @@
 import React from 'react';
 import {
-  Headphones,
-  CheckCircle2,
   Sparkles,
   ArrowRight,
   ShieldAlert,
-  Sliders,
-  Volume2,
   HelpCircle,
   Activity,
   Layers,
@@ -22,16 +18,16 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
     <div className="flex flex-col justify-start items-stretch gap-4 w-full">
       {/* 1. 상단 히어로 배너 */}
       <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-xl transition-colors flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="space-y-1 text-center sm:text-left">
+        <div className="space-y-1.5 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
             <Sparkles className="w-3 h-3 text-blue-500" />
-            <span>양쪽 귀의 숨겨진 청력 불균형을 찾아 바로잡는 솔루션</span>
+            <span>양쪽 귀가 똑같이 들리도록 중심을 맞춰드려요</span>
           </div>
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-            EarBalancer EQ 사용자 안내 및 시작 가이드
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100">
+            EarBalancer EQ는 어떤 프로그램인가요?
           </h2>
-          <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed">
-            사람마다 지문이 다르듯, <strong>양쪽 귀의 주파수별 청각 감도 역시 서로 다릅니다.</strong> 전문 용어를 몰라도 일상적인 그림 가이드를 따라 소리의 중심을 완벽한 정중앙으로 맞출 수 있습니다.
+          <p className="text-xs text-zinc-700 dark:text-zinc-300 max-w-xl leading-relaxed">
+            이어폰을 꼈을 때 소리가 미세하게 한쪽으로 쏠려 들린 적 있나요? 사람마다 양쪽 귀가 듣는 소리 크기가 조금씩 달라요. EarBalancer EQ는 내 머리 한가운데에서 소리가 똑바로 울리도록 좌우 균형을 맞춰주는 프로그램이에요.
           </p>
         </div>
 
@@ -44,7 +40,7 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
         </button>
       </div>
 
-      {/* 2. 단계별 사용법 4단계 카드 그리드 */}
+      {/* 2. 단계별 4단계 순서 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Step 1 */}
         <div className="p-3.5 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-2 transition-colors">
@@ -52,10 +48,10 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
             1
           </div>
           <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-            청음 환경 준비
+            이어폰 끼고 준비하기
           </h3>
-          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-normal">
-            조용한 실내에서 평소 사용하는 헤드폰이나 이어폰을 착용하고, 마스터 볼륨을 편안한 수준으로 설정합니다.
+          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-normal">
+            조용한 방에서 평소 쓰던 이어폰이나 헤드폰을 편하게 끼고, 볼륨을 알맞게 조절해주세요.
           </p>
         </div>
 
@@ -65,10 +61,10 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
             2
           </div>
           <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-            좌/우 0.1dB 정밀 맞춤
+            머리 가운데로 소리 모으기
           </h3>
-          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-normal">
-            각 음높이별 소리를 듣고, 소리가 내 머리 <strong>정중앙 한가운데</strong>에서 똑바로 울리도록 좌/우 슬라이더를 맞춥니다.
+          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-normal">
+            음높이별 소리를 듣고, 소리가 머리 정중앙에서 똑바로 울릴 때까지 좌우 슬라이더를 살짝 움직여보세요.
           </p>
         </div>
 
@@ -78,10 +74,10 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
             3
           </div>
           <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-            무중단 실시간 전/후 비교
+            원래 소리랑 비교해보기
           </h3>
-          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-normal">
-            음악이 재생되는 도중 Option A(보정 전)와 Option B(내 귀 맞춤)를 끊김 없이 전환하며 사운드 균형을 비교합니다.
+          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-normal">
+            음악을 들으면서 보정 전 소리(A)와 내 귀에 맞춘 소리(B)를 왔다 갔다 누르며 비교해보세요.
           </p>
         </div>
 
@@ -91,19 +87,19 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
             4
           </div>
           <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-            Equalizer APO 적용
+            윈도우에 저장해서 쓰기
           </h3>
-          <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-normal">
-            클릭 한 번으로 Equalizer APO <code>config.txt</code>에 자동 반영하거나 파일을 내려받아 윈도우 전체 사운드에 적용합니다.
+          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-normal">
+            마음에 들면 설정 파일을 다운받아서 Equalizer APO에 넣어주면 컴퓨터의 모든 소리에 적용돼요.
           </p>
         </div>
       </div>
 
-      {/* 3. 헷갈리기 쉬운 핵심 기능 알기 쉬운 설명 3종 */}
+      {/* 3. 보조 기능 안내 */}
       <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-3 transition-colors">
         <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
           <HelpCircle className="w-4 h-4 text-blue-500" />
-          <span>핵심 보조 기능 알아보기</span>
+          <span>알아두면 유용한 팁</span>
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -111,10 +107,10 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex items-center gap-1.5 text-xs font-bold text-purple-700 dark:text-purple-300">
               <Activity className="w-3.5 h-3.5" />
-              <span>위상(Phase) 180° 반전이란?</span>
+              <span>위상 반전은 언제 쓰나요?</span>
             </div>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              소리가 머리 한가운데 모이지 않고 <strong>머리 바깥으로 흩어지거나 귓속이 텅 빈 것처럼 먹먹할 때</strong> 켜보세요. 음파를 180도 뒤집어 분산된 소리를 정중앙으로 모아주는 기능입니다.
+            <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              소리가 가운데에 안 모이고 머리 바깥으로 흩어지거나, 귀가 멍멍하게 느껴질 때 켜보세요. 소리를 정중앙으로 모아주는 기능이에요.
             </p>
           </div>
 
@@ -122,10 +118,10 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300">
               <ArrowLeftRight className="w-3.5 h-3.5" />
-              <span>좌우 채널 반전(Swap)이란?</span>
+              <span>좌우 채널 반전은 무엇인가요?</span>
             </div>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              헤드폰을 거꾸로 꼈거나 좌우 귀의 밸런스 차이를 반대로 테스트해보고 싶을 때, <strong>클릭 한 번으로 현재 대역의 좌측과 우측 보정 수치를 서로 맞바꿉니다.</strong>
+            <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              이어폰을 반대로 꼈거나, 양쪽 귀의 균형을 거꾸로 확인해보고 싶을 때 버튼 하나로 왼쪽과 오른쪽 수치를 바로 맞바꿔줘요.
             </p>
           </div>
 
@@ -133,26 +129,26 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
               <Layers className="w-3.5 h-3.5" />
-              <span>ISO 226 표준 청각 보정이란?</span>
+              <span>ISO 226 자동 보정이란?</span>
             </div>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              인간의 귀는 저음(31Hz)과 초고음(16kHz)을 중음보다 훨씬 작게 듣습니다. <strong>어떤 주파수를 틀어도 동일한 체감 크기로 안전하게 들리도록</strong> 시스템이 최적 게인을 자동 적용합니다.
+            <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              사람 귀는 낮은 저음과 높은 고음을 작게 들어요. 어떤 음높이를 틀어도 귀에 부담 없이 편안하고 똑같은 크기로 들리도록 시스템이 자동 조절해줍니다.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 4. 청각 안전 및 주의사항 (Safety Notice) */}
+      {/* 4. 주의사항 */}
       <div className="p-4 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/60 flex items-start gap-3 text-xs transition-colors">
         <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="space-y-1">
           <div className="font-bold text-amber-900 dark:text-amber-200">
-            청각 보호 및 주의사항
+            귀 건강을 위한 안내
           </div>
           <ul className="text-[11px] text-amber-800 dark:text-amber-300 list-disc list-inside space-y-0.5 leading-relaxed">
-            <li>과도하게 높은 볼륨으로 장시간 순음(Sine wave) 테스트를 지속하지 마세요. 귀에 피로감이 들면 10분간 휴식을 취하세요.</li>
-            <li>앱 내부에는 급작스러운 음량 피크로 인한 청력 손상을 방지하는 <strong>소프트 리미터(Compressor)</strong>가 상시 작동합니다.</li>
-            <li>만약 중이염, 이관 이상, 돌발성 난청 등 급성 청각 질환이 의심되는 경우, 프로그램 보정에 의존하기 전 이비인후과 전문의의 진단을 우선 받으세요.</li>
+            <li>소리를 너무 크게 튼 채로 오래 테스트하지 마세요. 귀가 피곤하면 잠시 쉬었다가 진행해주세요.</li>
+            <li>갑자기 소리가 커져서 귀가 다치지 않도록 안전 보호 장치(소프트 리미터)가 켜져 있어요.</li>
+            <li>만약 중이염이나 귀 먹먹함 같은 증상이 있다면 프로그램으로 맞추기 전에 먼저 이비인후과 진료를 받아보시길 권장해요.</li>
           </ul>
         </div>
       </div>

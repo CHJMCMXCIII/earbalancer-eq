@@ -22,7 +22,7 @@ export function App() {
   const [calibrations, setCalibrations] = useState<BandState[]>(() => getDefaultBands());
   const [masterVolume, setMasterVolume] = useState<number>(0.5);
 
-  // 라이트/다크 모드 상태
+  // 라이트/다크 모드 상태 (기본 다크 모드, LocalStorage 연동)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('earbalancer_theme');
@@ -46,10 +46,6 @@ export function App() {
       localStorage.setItem('earbalancer_theme', 'light');
     }
   }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
-  };
 
   const handleVolumeChange = (vol: number) => {
     setMasterVolume(vol);
@@ -77,21 +73,21 @@ export function App() {
                 <h1 className="font-bold text-sm tracking-tight text-zinc-900 dark:text-white">
                   EarBalancer EQ
                 </h1>
-                <span className="px-1.5 py-0.2 text-[9px] bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded font-semibold border border-zinc-200 dark:border-zinc-700">
+                <span className="px-1.5 py-0.2 text-[9px] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded font-semibold border border-zinc-300 dark:border-zinc-700">
                   양쪽 청각 보정
                 </span>
               </div>
             </div>
           </div>
 
-          {/* 중앙 단계 네비게이션 탭 (시작 가이드 포함) */}
+          {/* 중앙 단계 네비게이션 탭 (소개/가이드 포함) */}
           <nav className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-950 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs transition-colors">
             <button
               onClick={() => setActiveTab('guide')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                 activeTab === 'guide'
-                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm font-bold'
+                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5 text-blue-500" />
@@ -102,8 +98,8 @@ export function App() {
               onClick={() => setActiveTab('calibrate')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                 activeTab === 'calibrate'
-                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm font-bold'
+                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -114,8 +110,8 @@ export function App() {
               onClick={() => setActiveTab('abtest')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                 activeTab === 'abtest'
-                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm font-bold'
+                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-purple-500" />
@@ -126,8 +122,8 @@ export function App() {
               onClick={() => setActiveTab('export')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                 activeTab === 'export'
-                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm font-bold'
+                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
               }`}
             >
               <FolderOutput className="w-3.5 h-3.5 text-emerald-500" />
@@ -135,30 +131,40 @@ export function App() {
             </button>
           </nav>
 
-          {/* 우측 볼륨 & 라이트/다크 모드 토글 */}
-          <div className="flex items-center gap-2">
-            {/* 눈에 잘 띄는 라이트/다크 모드 전환 버튼 */}
-            <button
-              onClick={toggleTheme}
-              title={isDarkMode ? '밝은 라이트 모드로 전환' : '편안한 다크 모드로 전환'}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-lg border border-zinc-200 dark:border-zinc-700 transition-colors text-xs font-semibold cursor-pointer shadow-xs"
-            >
-              {isDarkMode ? (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline text-[11px]">라이트</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-zinc-700" />
-                  <span className="hidden sm:inline text-[11px]">다크</span>
-                </>
-              )}
-            </button>
+          {/* 우측 볼륨 & 좌우 스위치 토글 방식의 라이트/다크 모드 */}
+          <div className="flex items-center gap-2.5">
+            {/* 좌우 스위치 토글 버튼 (Sliding Pill Switch Toggle) */}
+            <div className="flex items-center p-0.5 bg-zinc-200 dark:bg-zinc-800 rounded-full border border-zinc-300 dark:border-zinc-700 relative text-[11px] font-semibold select-none shadow-xs">
+              <button
+                onClick={() => setIsDarkMode(false)}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full transition-all duration-200 cursor-pointer ${
+                  !isDarkMode
+                    ? 'bg-white text-zinc-950 shadow-sm font-bold'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+                title="밝고 선명한 라이트 모드"
+              >
+                <Sun className="w-3 h-3 text-amber-500" />
+                <span>라이트</span>
+              </button>
+
+              <button
+                onClick={() => setIsDarkMode(true)}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full transition-all duration-200 cursor-pointer ${
+                  isDarkMode
+                    ? 'bg-zinc-900 text-white shadow-sm font-bold'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+                title="눈이 편안한 다크 모드"
+              >
+                <Moon className="w-3 h-3 text-zinc-300" />
+                <span>다크</span>
+              </button>
+            </div>
 
             {/* 마스터 볼륨 슬라이더 */}
             <div className="flex items-center gap-2 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs transition-colors">
-              <Volume2 className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <Volume2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
               <input
                 type="range"
                 min="0"
@@ -169,7 +175,7 @@ export function App() {
                 className="w-16 h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 title="앱 마스터 볼륨"
               />
-              <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-400 w-6">
+              <span className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 w-6 font-semibold">
                 {Math.round(masterVolume * 100)}%
               </span>
             </div>
@@ -213,7 +219,7 @@ export function App() {
       </main>
 
       {/* 3. 하단 푸터 (chjmcmxciii 텍스트 단독 표기, 링크 x) */}
-      <footer className="flex-shrink-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xs border-t border-zinc-200 dark:border-zinc-900 py-2 px-4 text-center text-[11px] text-zinc-500 dark:text-zinc-500 transition-colors">
+      <footer className="flex-shrink-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xs border-t border-zinc-200 dark:border-zinc-900 py-2 px-4 text-center text-[11px] text-zinc-600 dark:text-zinc-400 font-medium transition-colors">
         <p>EarBalancer EQ • chjmcmxciii</p>
       </footer>
     </div>

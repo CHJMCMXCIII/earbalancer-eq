@@ -1,11 +1,11 @@
 // Web Audio API Audio Engine
 // 실시간 소리 생성, 좌/우 개별 채널 제어, ISO 226 자동 연동,
-// 끊김 없는 무중단 A/B 전환 (Gapless A/B Switching), 체감 음량 자동 매칭 (Gain Matching), 소프트 리미터
+// 무중단 A/B 전환, 일시정지(Pause)/재개(Resume), 탐색(Seek), 게인 매칭, 소프트 리미터
 
 export interface BandCalibration {
-  leftDb: number;       // -15 dB ~ +15 dB (사용자 좌측 귀 보정)
-  rightDb: number;      // -15 dB ~ +15 dB (사용자 우측 귀 보정)
-  phaseInvert: boolean; // 180도 위상 반전
+  leftDb: number;
+  rightDb: number;
+  phaseInvert: boolean;
 }
 
 export class AudioEngine {
@@ -21,22 +21,22 @@ export class AudioEngine {
   private toneActive: boolean = false;
   private currentFrequency: number = 1000;
 
-  // A/B 테스트용 무중단 오디오 재생기
+  // A/B 테스트용 오디오 재생기 (재생/일시정지/탐색 지원)
   private abSourceNode: AudioBufferSourceNode | null = null;
   private abAudioBuffer: AudioBuffer | null = null;
-  private abSplitter: ChannelSplitterNode | null = null;
-  private abBypassGain: GainNode | null = null; // Option A (원본 바이패스 게인)
-  private abEqGain: GainNode | null = null;     // Option B (내 귀 맞춤 EQ 게인)
-  private abFiltersLeft: BiquadFilterNode[] = [];
-  private abFiltersRight: BiquadFilterNode[] = [];
+  private abBypassGain: GainNode | null = null;
+  private abEqGain: GainNode | null = null;
   private abIsPlaying: boolean = false;
+  private abIsPaused: boolean = false;
   private abBypass: boolean = false;
+
+  // 재생 위치 추적
+  private abStartedAt: number = 0;
+  private abPausedAt: number = 0;
+  private abDuration: number = 0;
 
   constructor() {}
 
-  /**
-   * 사용자 제스처 시 AudioContext 초기화 및 오디오 그래프 구축
-   */
   public async ensureContext(): Promise<AudioContext> {
     if (!this.ctx) {
       const AudioContextClass =
@@ -44,7 +44,7 @@ export class AudioEngine {
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioContextClass();
 
-      // [안전 장치] 소프트 리미터 (과도한 피크로 인한 청력 손상 방지)
+      // 청각 보호 소프트 리미터
       this.limiter = this.ctx.createDynamicsCompressor();
       this.limiter.threshold.setValueAtTime(-3.0, this.ctx.currentTime);
       this.limiter.knee.setValueAtTime(6.0, this.ctx.currentTime);
@@ -52,11 +52,9 @@ export class AudioEngine {
       this.limiter.attack.setValueAtTime(0.003, this.ctx.currentTime);
       this.limiter.release.setValueAtTime(0.1, this.ctx.currentTime);
 
-      // 마스터 볼륨 게인
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
 
-      // masterGain -> limiter -> destination
       this.masterGain.connect(this.limiter);
       this.limiter.connect(this.ctx.destination);
     }
@@ -68,18 +66,12 @@ export class AudioEngine {
     return this.ctx;
   }
 
-  /**
-   * 마스터 볼륨 설정 (0.0 ~ 1.0)
-   */
   public setMasterVolume(vol: number) {
     if (!this.masterGain || !this.ctx) return;
     const clamped = Math.max(0, Math.min(1, vol));
     this.masterGain.gain.setTargetAtTime(clamped * 0.5, this.ctx.currentTime, 0.02);
   }
 
-  /**
-   * 단일 주파수 순음(Sine wave) 재생 시작
-   */
   public async startTone(
     freq: number,
     leftDb: number = 0,
@@ -95,19 +87,16 @@ export class AudioEngine {
     this.currentFrequency = freq;
     const now = this.ctx.currentTime;
 
-    // 1. 발진기 생성
     this.osc = this.ctx.createOscillator();
     this.osc.type = 'sine';
     this.osc.frequency.setValueAtTime(freq, now);
 
-    // 2. 좌우 개별 게인 노드
     const baseLinear = 0.15;
     const clampedIso = Math.min(22, Math.max(-10, isoOffsetDb * 0.6));
     const effectiveLeftDb = leftDb + clampedIso;
     const effectiveRightDb = rightDb + clampedIso;
 
     const leftLinear = baseLinear * Math.pow(10, effectiveLeftDb / 20);
-    // phaseInvert일 경우 우측 채널 위상을 180도 반전 (-1)
     const rightLinear = baseLinear * Math.pow(10, effectiveRightDb / 20) * (phaseInvert ? -1 : 1);
 
     this.oscLeftGain = this.ctx.createGain();
@@ -119,7 +108,6 @@ export class AudioEngine {
     this.oscRightGain.gain.setValueAtTime(0.0001, now);
     this.oscRightGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(rightLinear)), now + 0.025);
 
-    // 3. 스테레오 채널 분리 병합
     this.oscMerger = this.ctx.createChannelMerger(2);
 
     this.osc.connect(this.oscLeftGain);
@@ -149,7 +137,6 @@ export class AudioEngine {
     const effectiveRightDb = rightDb + clampedIso;
 
     const leftLinear = Math.max(0.0001, baseLinear * Math.pow(10, effectiveLeftDb / 20));
-    // 위상 반전 시 부호 반전
     const rightLinear = (phaseInvert ? -1 : 1) * Math.max(0.0001, baseLinear * Math.pow(10, effectiveRightDb / 20));
 
     this.oscLeftGain.gain.setTargetAtTime(leftLinear, now, 0.015);
@@ -182,7 +169,7 @@ export class AudioEngine {
     if (!this.ctx) throw new Error('AudioContext not ready');
 
     const sampleRate = this.ctx.sampleRate;
-    const duration = 12.0;
+    const duration = 16.0;
     const length = Math.floor(sampleRate * duration);
     const buffer = this.ctx.createBuffer(2, length, sampleRate);
 
@@ -230,50 +217,48 @@ export class AudioEngine {
     const arrayBuffer = await file.arrayBuffer();
     const decoded = await ctx.decodeAudioData(arrayBuffer);
     this.abAudioBuffer = decoded;
+    this.abDuration = decoded.duration;
+    this.abPausedAt = 0;
     return decoded;
   }
 
   /**
-   * [무중단 A/B 비교 테스트 재생 (Gapless & Continuous Playing)]
-   * 사용자가 Option A(보정 전) <-> Option B(보정 후)를 전환하더라도,
-   * 음원이 처음부터 다시 재생되지 않고 현재 재생 위치를 유지하면서
-   * 크로스페이드로 즉시 전환되는 듀얼 패스(Dual Path) 오디오 그래프 구축
+   * A/B 비교 테스트 재생 (특정 오프셋 위치에서 시작 가능)
    */
   public async startABTest(
     calibrations: { freq: number; leftDb: number; rightDb: number }[],
-    bypass: boolean = false
+    bypass: boolean = false,
+    offsetSeconds: number = 0
   ) {
     const ctx = await this.ensureContext();
     if (!this.masterGain) return;
 
-    this.stopABTest();
+    this.stopABTestInternal();
 
     if (!this.abAudioBuffer) {
       this.abAudioBuffer = this.createAmbientTestBuffer();
     }
+    this.abDuration = this.abAudioBuffer.duration;
 
     const now = ctx.currentTime;
     this.abSourceNode = ctx.createBufferSource();
     this.abSourceNode.buffer = this.abAudioBuffer;
     this.abSourceNode.loop = true;
 
-    // 체감 음량 자동 매칭 (Gain Matching) 계산
+    // 체감 음량 자동 매칭
     const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
     const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
     const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
 
-    // 1. 원본 바이패스 경로 게인 노드 (Option A)
+    // 1. 원본 바이패스 게인 (Option A)
     this.abBypassGain = ctx.createGain();
     this.abBypassGain.gain.setValueAtTime(bypass ? 1.0 : 0.0, now);
 
-    // 2. EQ 필터 체인 통과 경로 게인 노드 (Option B)
+    // 2. EQ 통과 게인 (Option B)
     this.abEqGain = ctx.createGain();
     this.abEqGain.gain.setValueAtTime(!bypass ? gainMatchLinear : 0.0, now);
 
-    // 3. 31밴드 스테레오 필터 체인 구축
-    this.abFiltersLeft = [];
-    this.abFiltersRight = [];
-
+    // 3. 31밴드 스테레오 필터 체인
     const splitter = ctx.createChannelSplitter(2);
     const merger = ctx.createChannelMerger(2);
 
@@ -293,9 +278,6 @@ export class AudioEngine {
       rightFilt.Q.setValueAtTime(4.31, now);
       rightFilt.gain.setValueAtTime(b.rightDb, now);
 
-      this.abFiltersLeft.push(leftFilt);
-      this.abFiltersRight.push(rightFilt);
-
       if (idx === 0) {
         splitter.connect(leftFilt, 0);
         splitter.connect(rightFilt, 1);
@@ -311,52 +293,108 @@ export class AudioEngine {
     prevLeft.connect(merger, 0, 0);
     prevRight.connect(merger, 0, 1);
 
-    // 오디오 소스를 두 경로로 동시 분기 연결
-    // 경로 A: Direct -> abBypassGain -> masterGain
+    // 경로 A
     this.abSourceNode.connect(this.abBypassGain);
     this.abBypassGain.connect(this.masterGain);
 
-    // 경로 B: Filtered -> abEqGain -> masterGain
+    // 경로 B
     this.abSourceNode.connect(splitter);
     merger.connect(this.abEqGain);
     this.abEqGain.connect(this.masterGain);
 
-    this.abSourceNode.start(now);
+    // 오프셋 위치에서 재생 시작
+    const safeOffset = Math.max(0, offsetSeconds % this.abDuration);
+    this.abSourceNode.start(now, safeOffset);
+    this.abStartedAt = now - safeOffset;
     this.abIsPlaying = true;
+    this.abIsPaused = false;
     this.abBypass = bypass;
   }
 
   /**
-   * [무중단 실시간 전환]
-   * 음원을 멈추거나 재시작하지 않고, 볼륨 크로스페이드(Crossfade)로 즉시 전환
+   * 일시정지 (Pause)
+   */
+  public pauseABTest() {
+    if (!this.abIsPlaying || !this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    if (this.abDuration > 0) {
+      this.abPausedAt = (now - this.abStartedAt) % this.abDuration;
+    }
+
+    this.stopABTestInternal();
+    this.abIsPlaying = false;
+    this.abIsPaused = true;
+  }
+
+  /**
+   * 일시정지 후 재개 (Resume)
+   */
+  public async resumeABTest(calibrations: { freq: number; leftDb: number; rightDb: number }[]) {
+    await this.startABTest(calibrations, this.abBypass, this.abPausedAt);
+  }
+
+  /**
+   * 재생 구간 탐색 (Seek)
+   */
+  public async seekABTest(
+    targetSeconds: number,
+    calibrations: { freq: number; leftDb: number; rightDb: number }[]
+  ) {
+    this.abPausedAt = targetSeconds;
+    if (this.abIsPlaying) {
+      await this.startABTest(calibrations, this.abBypass, targetSeconds);
+    }
+  }
+
+  /**
+   * 현재 재생 시간 및 총 길이 반환
+   */
+  public getCurrentPlaybackInfo(): { currentTime: number; duration: number } {
+    if (!this.abAudioBuffer) {
+      return { currentTime: 0, duration: 16 };
+    }
+
+    const duration = this.abAudioBuffer.duration;
+    if (this.abIsPaused) {
+      return { currentTime: this.abPausedAt, duration };
+    }
+
+    if (!this.abIsPlaying || !this.ctx) {
+      return { currentTime: 0, duration };
+    }
+
+    const elapsed = (this.ctx.currentTime - this.abStartedAt) % duration;
+    return { currentTime: elapsed, duration };
+  }
+
+  /**
+   * 무중단 실시간 A/B 전환
    */
   public toggleABBypass(
     bypass: boolean,
     calibrations: { freq: number; leftDb: number; rightDb: number }[]
   ) {
+    this.abBypass = bypass;
     if (!this.abIsPlaying || !this.ctx || !this.abBypassGain || !this.abEqGain) return;
 
-    this.abBypass = bypass;
     const now = this.ctx.currentTime;
-    const timeConstant = 0.015; // 15ms 고속 팝 방지 크로스페이드
+    const timeConstant = 0.015;
 
-    // 체감 음량 자동 매칭 계산
     const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
     const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
     const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
 
     if (bypass) {
-      // Option A 활성화: 원본 바이패스는 켜고 EQ 경로는 끔
       this.abBypassGain.gain.setTargetAtTime(1.0, now, timeConstant);
       this.abEqGain.gain.setTargetAtTime(0.0001, now, timeConstant);
     } else {
-      // Option B 활성화: EQ 경로는 켜고 원본 바이패스는 끔
       this.abBypassGain.gain.setTargetAtTime(0.0001, now, timeConstant);
       this.abEqGain.gain.setTargetAtTime(gainMatchLinear, now, timeConstant);
     }
   }
 
-  public stopABTest() {
+  private stopABTestInternal() {
     if (this.abSourceNode) {
       try {
         this.abSourceNode.stop();
@@ -366,11 +404,21 @@ export class AudioEngine {
       }
       this.abSourceNode = null;
     }
+  }
+
+  public stopABTest() {
+    this.stopABTestInternal();
     this.abIsPlaying = false;
+    this.abIsPaused = false;
+    this.abPausedAt = 0;
   }
 
   public isABPlaying(): boolean {
     return this.abIsPlaying;
+  }
+
+  public isABPaused(): boolean {
+    return this.abIsPaused;
   }
 }
 

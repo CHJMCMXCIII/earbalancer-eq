@@ -109,10 +109,17 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 좌우 채널 반전 (Swap L/R) 기능
+  // 좌우 채널 반전 (Swap L/R) 기능 - 검증 및 완벽 구현
   const handleSwapChannels = () => {
     const currentL = currentBandCalib.leftDb;
     const currentR = currentBandCalib.rightDb;
+
+    if (currentL === 0 && currentR === 0) {
+      setInterpNotice('💡 현재 좌/우 보정값이 모두 0.0 dB라 동일합니다. 슬라이더를 조절한 후 맞바꿔보세요.');
+      setTimeout(() => setInterpNotice(null), 3000);
+      return;
+    }
+
     const updated = [...calibrations];
     updated[currentBandId] = {
       ...updated[currentBandId],
@@ -129,6 +136,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentBandInfo.isoCompDb
       );
     }
+
+    setInterpNotice(`⇄ 좌/우 채널 보정값이 맞바뀌었습니다! (L: ${currentR > 0 ? '+' : ''}${currentR.toFixed(1)} dB / R: ${currentL > 0 ? '+' : ''}${currentL.toFixed(1)} dB)`);
+    setTimeout(() => setInterpNotice(null), 3500);
   };
 
   // 위상 반전 (Phase Invert) 기능
@@ -149,6 +159,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentBandInfo.isoCompDb
       );
     }
+
+    setInterpNotice(newPhase ? '⚡ 180° 위상 반전이 켜졌습니다 (소리를 모아줍니다).' : '위상이 정상(0°)으로 복구되었습니다.');
+    setTimeout(() => setInterpNotice(null), 3000);
   };
 
   const handleResetCurrent = () => {
@@ -217,7 +230,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           <button
             onClick={() => handleStepChange(currentStepIndex - 1)}
             disabled={currentStepIndex === 0}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 disabled:opacity-30 disabled:pointer-events-none text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 disabled:opacity-30 disabled:pointer-events-none text-zinc-900 dark:text-zinc-100 transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>이전</span>
@@ -271,7 +284,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         {/* 10단계 간편 모드 시에만 노출되는 '한 번에 채우기' (토글 좌측에 배치) & 모드 토글 */}
         <div className="flex items-center gap-2">
           {interpNotice && (
-            <span className="text-emerald-600 dark:text-emerald-400 text-[11px] font-medium hidden sm:inline">
+            <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold hidden sm:inline">
               {interpNotice}
             </span>
           )}
@@ -298,7 +311,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               className={`px-2.5 py-1 rounded-md font-semibold transition-all text-xs cursor-pointer ${
                 mode === '10-band'
                   ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
               }`}
             >
               10단계 간편
@@ -311,7 +324,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               className={`px-2.5 py-1 rounded-md font-semibold transition-all text-xs cursor-pointer ${
                 mode === '31-band'
                   ? 'bg-white dark:bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                  : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
               }`}
             >
               31단계 정밀
@@ -360,7 +373,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
             <button
               onClick={handleResetCurrent}
-              className="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
+              className="flex items-center gap-1 text-[11px] text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
               <span>현재 음높이 리셋</span>
@@ -370,7 +383,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           {/* 왼쪽 귀 (Left Channel) 채널 분리 슬라이더 (0.1 dB 단위 고정) */}
           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex justify-between items-center text-xs font-semibold">
-              <span className="text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+              <span className="text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
                 <span>왼쪽 귀 (Channel: L) 소리 크기 보정</span>
               </span>
@@ -379,7 +392,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-zinc-500 font-mono">-12.0 dB</span>
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono">-12.0 dB</span>
               <input
                 type="range"
                 min="-12.0"
@@ -389,14 +402,14 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 onChange={(e) => handleUpdateLeft(parseFloat(e.target.value))}
                 className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <span className="text-[10px] text-zinc-500 font-mono">+12.0 dB</span>
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono">+12.0 dB</span>
             </div>
           </div>
 
           {/* 오른쪽 귀 (Right Channel) 채널 분리 슬라이더 (0.1 dB 단위 고정) */}
           <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 space-y-1.5 transition-colors">
             <div className="flex justify-between items-center text-xs font-semibold">
-              <span className="text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+              <span className="text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
                 <span>오른쪽 귀 (Channel: R) 소리 크기 보정</span>
               </span>
@@ -405,7 +418,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-zinc-500 font-mono">-12.0 dB</span>
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono">-12.0 dB</span>
               <input
                 type="range"
                 min="-12.0"
@@ -415,24 +428,24 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 onChange={(e) => handleUpdateRight(parseFloat(e.target.value))}
                 className="w-full h-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <span className="text-[10px] text-zinc-500 font-mono">+12.0 dB</span>
+              <span className="text-[10px] text-zinc-600 dark:text-zinc-400 font-mono">+12.0 dB</span>
             </div>
           </div>
 
           {/* ISO 226 표준 전체 음량 자동 연동 상태 */}
           <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950/80 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-xs transition-colors">
             <div className="flex items-center gap-2">
-              <Lock className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+              <Lock className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 flex-shrink-0" />
               <div>
-                <div className="font-semibold text-zinc-800 dark:text-zinc-300 text-[11px]">
+                <div className="font-semibold text-zinc-900 dark:text-zinc-200 text-[11px]">
                   ISO 226 표준 전체 음량 자동 연동 (Default)
                 </div>
-                <div className="text-[10px] text-zinc-500">
+                <div className="text-[10px] text-zinc-600 dark:text-zinc-400">
                   인간 청각 특성에 맞춰 시스템이 자동 보정 (임의 변경 잠금)
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 px-2 py-1 rounded font-mono text-[11px] text-zinc-700 dark:text-zinc-300 font-semibold flex-shrink-0 shadow-xs">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 px-2 py-1 rounded font-mono text-[11px] text-zinc-800 dark:text-zinc-200 font-bold flex-shrink-0 shadow-xs">
               +{currentBandInfo.isoCompDb.toFixed(1)} dB 보정됨
             </div>
           </div>
@@ -440,17 +453,17 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           {/* 보조 기능 1: 좌우 채널 반전 (Swap L/R) */}
           <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950/60 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 text-xs transition-colors">
             <div className="space-y-0.5">
-              <div className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 text-[11px]">
+              <div className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 text-[11px]">
                 <ArrowLeftRight className="w-3.5 h-3.5 text-blue-500" />
                 <span>좌/우 채널 반전 (Swap L/R)</span>
               </div>
-              <div className="text-[10px] text-zinc-500">
+              <div className="text-[10px] text-zinc-600 dark:text-zinc-400">
                 헤드폰 착용 상태를 점검하거나 양쪽 밸런스를 반대로 비교해볼 때 좌우 값을 맞바꿉니다
               </div>
             </div>
             <button
               onClick={handleSwapChannels}
-              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
+              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 transition-colors cursor-pointer shadow-xs"
             >
               채널 맞바꾸기
             </button>
@@ -459,11 +472,11 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           {/* 보조 기능 2: 위상(Phase) 180° 반전 및 알기 쉬운 설명 */}
           <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950/60 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3 text-xs transition-colors">
             <div className="space-y-0.5">
-              <div className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 text-[11px]">
+              <div className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 text-[11px]">
                 <Activity className="w-3.5 h-3.5 text-purple-500" />
                 <span>소리가 머리 밖으로 흩어질 때: 위상(Phase) 반전</span>
               </div>
-              <div className="text-[10px] text-zinc-500">
+              <div className="text-[10px] text-zinc-600 dark:text-zinc-400">
                 소리가 중심에 맺히지 않고 귓속이 텅 빈 것처럼 흩어질 때 켜면 180도 위상을 뒤집어 소리를 모아줍니다
               </div>
             </div>
@@ -472,7 +485,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                 currentBandCalib.phaseInvert
                   ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
-                  : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
+                  : 'bg-white hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'
               }`}
             >
               {currentBandCalib.phaseInvert ? '위상 반전 ON (180°)' : '위상 정상 (0°)'}
