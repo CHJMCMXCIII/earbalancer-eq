@@ -20,18 +20,21 @@ import {
   BookOpen,
   Info,
   CheckCircle2,
+  RotateCcw,
 } from 'lucide-react';
 
 interface ExportAPOPageProps {
   calibrations: BandState[];
   setCalibrations: React.Dispatch<React.SetStateAction<BandState[]>>;
   onBackToABTest: () => void;
+  onGoToCalibration?: () => void;
 }
 
 export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   calibrations,
   setCalibrations,
   onBackToABTest,
+  onGoToCalibration,
 }) => {
   const [profileName, setProfileName] = useState<string>('내 헤드폰');
 
@@ -144,6 +147,35 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     alert(`[${profileName}] 설정이 브라우저에 안전하게 저장되었습니다.`);
   };
 
+  // 프리셋 재생성 (현재 프로필 자동 저장 후 소리 맞춤 페이지로 이동)
+  const handleRegeneratePreset = () => {
+    // 1. 현재 조정 프로필 자동 저장
+    const existingIdx = profiles.findIndex((p) => p.name === profileName);
+    const updatedProfiles = [...profiles];
+
+    const currentProfileToSave: Profile = {
+      id: existingIdx >= 0 ? profiles[existingIdx].id : `profile-${Date.now()}`,
+      name: profileName,
+      mode: '31-band',
+      updatedAt: new Date().toISOString(),
+      calibrations: [...calibrations],
+    };
+
+    if (existingIdx >= 0) {
+      updatedProfiles[existingIdx] = currentProfileToSave;
+    } else {
+      updatedProfiles.unshift(currentProfileToSave);
+    }
+
+    setProfiles(updatedProfiles);
+    saveProfilesToStorage(updatedProfiles);
+
+    // 2. 소리 맞춤(캘리브레이션) 페이지로 이동
+    if (onGoToCalibration) {
+      onGoToCalibration();
+    }
+  };
+
   const handleLoadProfile = (p: Profile) => {
     setProfileName(p.name);
     setCalibrations([...p.calibrations]);
@@ -172,7 +204,14 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           모든 캘리브레이션이 완료되었습니다. Equalizer APO에 저장하세요!
         </span>
 
-        <span className="text-[#8d8d8d] text-[11px] font-medium">Equalizer APO 규격</span>
+        <button
+          onClick={handleRegeneratePreset}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
+          title="현재 조정된 프로필을 자동 저장하고 소리 맞춤 화면으로 이동합니다"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>프리셋 재생성</span>
+        </button>
       </div>
 
       {/* 2. 네비게이션 아래로 이동한 [Equalizer APO 앱 가이드 & 설치 지원 카드] */}

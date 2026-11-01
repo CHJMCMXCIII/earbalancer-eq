@@ -220,6 +220,7 @@ export function App() {
             calibrations={calibrations}
             setCalibrations={setCalibrations}
             onBackToABTest={() => setActiveTab('abtest')}
+            onGoToCalibration={() => setActiveTab('calibrate')}
           />
         )}
       </main>
