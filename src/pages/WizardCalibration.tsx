@@ -264,18 +264,13 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             currentBand={currentBandInfo}
             onToggleSound={handleToggleSound}
             onResetCurrent={handleResetCurrent}
+            actionNotice={actionNotice}
           />
         </div>
 
         {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 보조 도구 패널 (h-full & justify-between) */}
         <div className="md:col-span-7 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3.5">
-          {actionNotice && (
-            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-600 text-xs font-semibold text-emerald-800 dark:text-emerald-200 transition-all duration-150">
-              {actionNotice}
-            </div>
-          )}
-
-          {/* 보청기 원리 기반 권장 안내 팁 배너 및 볼륨/청력 안전 주의 문구 */}
+          {/* 보청기 원리 기반 권장 안내 팁 배너, 볼륨/청력 안전 주의 문구 및 착용상태/이압 안내 요약 */}
           <div className="p-2.5 rounded-lg bg-[#edf5ff] dark:bg-[#002d9c]/25 border border-[#d0e2ff] dark:border-[#0043ce]/60 space-y-1.5 text-[11px]">
             <div className="flex items-start gap-2 text-[#0043ce] dark:text-[#78a9ff]">
               <span className="flex-shrink-0 text-xs mt-0.5">💡</span>
@@ -287,6 +282,12 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               <span className="flex-shrink-0 text-xs mt-0.5">⚠️</span>
               <span className="leading-tight">
                 <strong>주의:</strong> 볼륨을 과도하게 키우면 이어폰·헤드폰의 드라이버가 고장나거나 청력이 손상될 수 있으니, 적정 음량에서 안전하게 조절해주세요.
+              </span>
+            </div>
+            <div className="flex items-start gap-2 text-[#525252] dark:text-[#c6c6c6] pt-1.5 border-t border-[#d0e2ff]/60 dark:border-[#0043ce]/40">
+              <span className="flex-shrink-0 text-xs mt-0.5">🎧</span>
+              <span className="leading-tight">
+                <strong>착용 방식 및 이압 안내:</strong> 이어폰 삽입 깊이, 헤드폰 착용 각도·밀폐도 및 당일의 귀 압력(이압)에 따라 좌우 감도가 달라질 수 있습니다. 평소 감상 시 어색함이 느껴지면 언제든 재설정하세요.
               </span>
             </div>
           </div>

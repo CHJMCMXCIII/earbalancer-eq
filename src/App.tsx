@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'guide' | 'calibrate' | 'abtest' | 'export'>('calibrate');
+  const [activeTab, setActiveTab] = useState<'guide' | 'calibrate' | 'abtest' | 'export'>('guide');
   const [calibrations, setCalibrations] = useState<BandState[]>(() => getDefaultBands());
   const [masterVolume, setMasterVolume] = useState<number>(0.5);
   // 내 음악 파일명 상태를 상위 App으로 승격하여 탭 전환 시에도 유지

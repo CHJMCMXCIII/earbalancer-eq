@@ -48,6 +48,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const [autoApplied, setAutoApplied] = useState<boolean>(false);
   const [showGuideModal, setShowGuideModal] = useState<boolean>(false);
+  const [showInstallModal, setShowInstallModal] = useState<boolean>(false);
 
   // 캘리브레이션 값 변경 시 프리앰프 자동 동기화
   React.useEffect(() => {
@@ -198,15 +199,13 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             <span>설정 가이드 보기</span>
           </button>
 
-          <a
-            href="https://sourceforge.net/projects/equalizerapo/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#edf5ff] dark:bg-[#002d9c]/40 hover:bg-[#d0e2ff] dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded font-semibold border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs text-xs"
+          <button
+            onClick={() => setShowInstallModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#edf5ff] dark:bg-[#002d9c]/40 hover:bg-[#d0e2ff] dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded font-semibold border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
           >
-            <span>Equalizer APO 앱 설치</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+            <Download className="w-3.5 h-3.5" />
+            <span>Equalizer APO 설치 안내</span>
+          </button>
         </div>
       </div>
 
@@ -441,6 +440,111 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 className="px-4 py-2 bg-[#0f62fe] hover:bg-[#0353e9] text-white rounded text-xs sm:text-sm font-semibold transition-colors duration-150 cursor-pointer"
               >
                 확인 완료
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Equalizer APO 앱 설치 및 초기 설정 가이드 팝업 모달 */}
+      {showInstallModal && (
+        <div
+          onClick={() => setShowInstallModal(false)}
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs transition-opacity duration-150 cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="carbon-card rounded-xl max-w-lg w-full p-5 space-y-4 shadow-2xl cursor-default"
+          >
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#e0e0e0] dark:border-[#393939]">
+              <div className="flex items-center gap-2 font-bold text-sm sm:text-base text-[#161616] dark:text-[#f4f4f4]">
+                <Download className="w-4 h-4 text-[#0f62fe]" />
+                <span>Equalizer APO 앱 설치 및 초기 설정 가이드</span>
+              </div>
+              <button
+                onClick={() => setShowInstallModal(false)}
+                className="text-[#8d8d8d] hover:text-[#161616] dark:hover:text-[#ffffff] text-base font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* 설치 4단계 직관적 안내 */}
+            <div className="space-y-2.5 text-xs text-[#525252] dark:text-[#c6c6c6] leading-relaxed max-h-[65vh] overflow-y-auto pr-1">
+              {/* 1단계 */}
+              <div className="p-3 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
+                    <span className="w-5 h-5 rounded-full bg-[#0f62fe] text-white flex items-center justify-center text-[11px] font-bold">1</span>
+                    <span>프로그램 다운로드</span>
+                  </div>
+                  <a
+                    href="https://sourceforge.net/projects/equalizerapo/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#0f62fe] hover:bg-[#0353e9] text-white rounded text-[11px] font-semibold shadow-xs transition-colors cursor-pointer"
+                  >
+                    <span>공식 다운로드 (SourceForge)</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+                <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                  공식 Equalizer APO SourceForge 페이지에서 최신 설치 파일(.exe)을 다운로드합니다.
+                </p>
+              </div>
+
+              {/* 2단계 */}
+              <div className="p-3 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1 shadow-xs">
+                <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
+                  <span className="w-5 h-5 rounded-full bg-[#0f62fe] text-white flex items-center justify-center text-[11px] font-bold">2</span>
+                  <span>설치 진행</span>
+                </div>
+                <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                  다운로드한 실행 파일을 열고 안내에 따라 설치를 진행합니다 (기본 경로 <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\</code> 설치 권장).
+                </p>
+              </div>
+
+              {/* 3단계 */}
+              <div className="p-3 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1.5 shadow-xs">
+                <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
+                  <span className="w-5 h-5 rounded-full bg-[#0f62fe] text-white flex items-center justify-center text-[11px] font-bold">3</span>
+                  <span>장치(Device) 선택 및 활성화</span>
+                </div>
+                <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
+                  설치 도중 또는 완료 직후 자동으로 <strong>Configurator</strong> 창이 열립니다.<br />
+                  이퀄라이저를 적용할 본인의 스피커나 헤드셋(출력 장치) 혹은 마이크(입력 장치)를 <strong>체크(V)</strong>하고 확인을 누릅니다.
+                </p>
+              </div>
+
+              {/* 4단계 */}
+              <div className="p-3 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1.5 shadow-xs">
+                <div className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 text-xs sm:text-sm">
+                  <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[11px] font-bold">4</span>
+                  <span>★ PC 재부팅 (필수)</span>
+                </div>
+                <p className="text-[11px] text-amber-900 dark:text-amber-200">
+                  설치 완료 후 <strong>컴퓨터를 반드시 재부팅</strong>해야 드라이버가 적용되어 정상 작동합니다.
+                </p>
+              </div>
+            </div>
+
+            {/* 모달 하단 버튼 영역 */}
+            <div className="flex justify-between items-center pt-2 border-t border-[#e0e0e0] dark:border-[#393939]">
+              <a
+                href="https://sourceforge.net/projects/equalizerapo/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#0f62fe] dark:text-[#78a9ff] hover:underline flex items-center gap-1 font-semibold"
+              >
+                <span>SourceForge 다운로드 링크</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <button
+                onClick={() => setShowInstallModal(false)}
+                className="px-4 py-2 bg-[#0f62fe] hover:bg-[#0353e9] text-white rounded text-xs sm:text-sm font-semibold transition-colors duration-150 cursor-pointer"
+              >
+                닫기
               </button>
             </div>
           </div>

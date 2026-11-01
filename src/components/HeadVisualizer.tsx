@@ -10,6 +10,7 @@ interface HeadVisualizerProps {
   currentBand: FrequencyBand;
   onToggleSound?: () => void;
   onResetCurrent?: () => void;
+  actionNotice?: string | null;
 }
 
 export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
@@ -20,6 +21,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   currentBand,
   onToggleSound,
   onResetCurrent,
+  actionNotice,
 }) => {
   const leftAmp = Math.max(0.3, Math.min(2.0, 1.0 + leftDb / 12));
   const rightAmp = Math.max(0.3, Math.min(2.0, 1.0 + rightDb / 12));
@@ -278,6 +280,13 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             </g>
           </g>
         </svg>
+
+        {/* 안내 알림 토스트 (소리 위치 가이드 그래픽 아래에 absolute로 배치하여 레이아웃 변경 방지) */}
+        {actionNotice && (
+          <div className="absolute -bottom-1 left-2 right-2 z-30 bg-[#161616]/95 dark:bg-[#ffffff]/95 text-white dark:text-[#161616] text-[11px] font-medium py-1.5 px-3 rounded-lg shadow-xl text-center backdrop-blur-xs border border-white/20 dark:border-black/20 pointer-events-none transition-all duration-150 animate-in fade-in">
+            {actionNotice}
+          </div>
+        )}
       </div>
 
       {/* 하단 주파수 대역 표시 박스 (10~12px) */}
