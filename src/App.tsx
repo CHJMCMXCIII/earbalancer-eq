@@ -15,6 +15,7 @@ import {
   Moon,
   BookOpen,
 } from 'lucide-react';
+import GitHubButton from 'react-github-btn';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'guide' | 'calibrate' | 'abtest' | 'export'>('guide');
@@ -228,12 +229,15 @@ export function App() {
         <p className="flex items-center justify-center gap-2 flex-wrap text-[11px]">
           <span>EarBalancer EQ</span>
           <span>•</span>
-          <span>chjmcmxciii</span>
-          <span>•</span>
-          <span className="text-[#0f62fe] dark:text-[#78a9ff] font-semibold text-[10px] sm:text-[11px]">
-            Windows 환경에서만 사용 가능합니다 (Equalizer APO 전용)
+          <span> 
+            <a href="https://github.com/CHJMCMXCIII/earbalancer-eq" target="_blank" rel="noopener noreferrer" className="text-[#0f62fe] dark:text-[#78a9ff] hover:underline">
+              chjmcmxciii
+            </a>
           </span>
-        </p>
+          <span>
+            <GitHubButton href="https://github.com/chjmcmxciii/earbalancer-eq" data-icon="octicon-star" data-show-count="true" aria-label="Star chjmcmxciii/earbalancer-eq on GitHub">Star</GitHubButton>
+          </span>
+          </p>
       </footer>
     </div>
   );

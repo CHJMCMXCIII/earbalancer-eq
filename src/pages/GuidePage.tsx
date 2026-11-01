@@ -27,6 +27,9 @@ export const GuidePage: React.FC<GuidePageProps> = ({ onStartCalibration }) => {
           <p className="text-sm text-[#525252] dark:text-[#c6c6c6] max-w-xl leading-relaxed">
             이어폰을 꼈을 때 소리가 미세하게 한쪽으로 쏠려 들린 적 있나요? 사람마다 양쪽 귀가 듣는 소리 크기가 조금씩 달라요. EarBalancer EQ는 내 머리 한가운데에서 소리가 똑바로 울리도록 좌우 균형을 맞춰주는 프로그램이에요.
           </p>
+          <strong className="text-[#0f62fe] dark:text-[#78a9ff] font-semibold text-[10px] sm:text-[11px]">
+            Windows 환경에서만 사용 가능합니다 (Equalizer APO 전용)
+          </strong>
         </div>
 
         <button
