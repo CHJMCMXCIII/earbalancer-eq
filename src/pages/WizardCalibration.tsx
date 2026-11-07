@@ -306,8 +306,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
         {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 보조 도구 패널 (h-full & justify-between) */}
         <div className="md:col-span-7 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3.5">
-          {/* [우측 카드 최상단] 31밴드 / 61밴드 정밀 모드 토글 & 61밴드 전용 31밴드 자동 채우기 버튼 */}
-          <div className="flex flex-wrap items-center justify-between gap-2 p-1.5 bg-[#f4f4f4] dark:bg-[#161616] rounded-lg border border-[#e0e0e0] dark:border-[#393939]">
+          {/* [우측 카드 최상단] 31밴드 / 61밴드 정밀 모드 토글 (자동 채우기 기능은 추후 재검토 후 도입을 위해 임시 숨김 처리) */}
+          <div className="flex items-center justify-start gap-2 p-1.5 bg-[#f4f4f4] dark:bg-[#161616] rounded-lg border border-[#e0e0e0] dark:border-[#393939]">
             <div className="flex items-center gap-1">
               <button
                 onClick={() => handleModeChange('31-band')}
@@ -333,16 +333,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               </button>
             </div>
 
-            {eqMode === '31-band' && (
-              <button
-                onClick={handleAutoFill31}
-                title="조절하신 주요 주파수 값을 바탕으로 31개 전체 대역을 부드럽게 자동 완성합니다"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/70 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 cursor-pointer shadow-xs"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>31밴드 자동 채우기</span>
-              </button>
-            )}
+            {/* 자동 채우기 버튼은 임시 숨김 처리 */}
           </div>
 
           {/* 보청기 원리 기반 권장 안내 팁 배너, 볼륨/청력 안전 주의 문구 및 착용상태/이압 안내 요약 */}
