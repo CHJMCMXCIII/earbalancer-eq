@@ -159,6 +159,89 @@ export function interpolate31to61Bands(
 }
 
 /**
+ * 31밴드 모드에서 사용자가 조절한 주요 주파수(1개 이상)를 기준으로
+ * 31개 대역 전체를 로그 주파수 공간에서 부드럽게 자동 보간하여 채우는 함수
+ */
+export function autoFill31Bands(
+  calibrations: { leftDb: number; rightDb: number; phaseInvert: boolean }[]
+): { leftDb: number; rightDb: number; phaseInvert: boolean }[] {
+  const result = [...calibrations];
+  while (result.length < 61) {
+    result.push({ leftDb: 0, rightDb: 0, phaseInvert: false });
+  }
+
+  const indices = THIRTY_ONE_BAND_INDICES_IN_61;
+  const calibratedAnchors = indices.filter(
+    (idx) => (result[idx]?.leftDb !== 0 || result[idx]?.rightDb !== 0)
+  );
+
+  if (calibratedAnchors.length === 0) {
+    return result;
+  }
+
+  if (calibratedAnchors.length === 1) {
+    const singleIdx = calibratedAnchors[0];
+    const valL = result[singleIdx].leftDb;
+    const valR = result[singleIdx].rightDb;
+    const phase = result[singleIdx].phaseInvert;
+
+    indices.forEach((idx) => {
+      result[idx] = { leftDb: valL, rightDb: valR, phaseInvert: phase };
+    });
+  } else {
+    indices.forEach((idx) => {
+      if (calibratedAnchors.includes(idx)) return;
+
+      const fCurr = Math.log10(FREQUENCY_BANDS_61[idx].freq);
+
+      let prevAnchor = calibratedAnchors[0];
+      let nextAnchor = calibratedAnchors[calibratedAnchors.length - 1];
+
+      for (let k = 0; k < calibratedAnchors.length; k++) {
+        if (calibratedAnchors[k] <= idx) {
+          prevAnchor = calibratedAnchors[k];
+        }
+        if (calibratedAnchors[k] >= idx) {
+          nextAnchor = calibratedAnchors[k];
+          break;
+        }
+      }
+
+      if (idx <= calibratedAnchors[0]) {
+        result[idx] = {
+          leftDb: result[calibratedAnchors[0]].leftDb,
+          rightDb: result[calibratedAnchors[0]].rightDb,
+          phaseInvert: result[calibratedAnchors[0]].phaseInvert,
+        };
+      } else if (idx >= calibratedAnchors[calibratedAnchors.length - 1]) {
+        const lastIdx = calibratedAnchors[calibratedAnchors.length - 1];
+        result[idx] = {
+          leftDb: result[lastIdx].leftDb,
+          rightDb: result[lastIdx].rightDb,
+          phaseInvert: result[lastIdx].phaseInvert,
+        };
+      } else {
+        const fMin = Math.log10(FREQUENCY_BANDS_61[prevAnchor].freq);
+        const fMax = Math.log10(FREQUENCY_BANDS_61[nextAnchor].freq);
+        const t = (fCurr - fMin) / (fMax - fMin);
+
+        const gPrev = result[prevAnchor];
+        const gNext = result[nextAnchor];
+
+        result[idx] = {
+          leftDb: Number((gPrev.leftDb * (1 - t) + gNext.leftDb * t).toFixed(1)),
+          rightDb: Number((gPrev.rightDb * (1 - t) + gNext.rightDb * t).toFixed(1)),
+          phaseInvert: gPrev.phaseInvert,
+        };
+      }
+    });
+  }
+
+  // 31밴드가 채워졌으므로 61밴드용 중간 대역도 동기화
+  return interpolate31to61Bands(result);
+}
+
+/**
  * 10밴드 캘리브레이션 결과로부터 31밴드로 선형/스플라인 보간(Interpolation)하는 함수
  */
 export function interpolate10to31Bands(

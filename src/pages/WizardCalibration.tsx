@@ -4,6 +4,7 @@ import {
   THIRTY_ONE_BAND_INDICES_IN_61,
   FrequencyBand,
   interpolate31to61Bands,
+  autoFill31Bands,
 } from '../data/iso226';
 import { audioEngine } from '../audio/AudioEngine';
 import { HeadVisualizer } from '../components/HeadVisualizer';
@@ -88,11 +89,21 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     setCurrentStepIndex(targetStep);
   };
 
-  // 61밴드 모드에서 31밴드 기준값을 바탕으로 중간 1/6 옥타브 홀수 대역 자동 보간 채우기
-  const handleAutoFill31To61 = () => {
-    const updated = interpolate31to61Bands(calibrations);
+  // 31밴드 모드에서 조절한 주요 주파수를 바탕으로 31개 전체 대역 자동 보간 채우기
+  const handleAutoFill31 = () => {
+    const calibratedCount = THIRTY_ONE_BAND_INDICES_IN_61.filter(
+      (idx) => calibrations[idx]?.leftDb !== 0 || calibrations[idx]?.rightDb !== 0
+    ).length;
+
+    if (calibratedCount === 0) {
+      setActionNotice('💡 먼저 기준이 되는 주파수를 1개 이상 조절한 후 자동 채우기를 눌러주세요.');
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+
+    const updated = autoFill31Bands(calibrations);
     setCalibrations(updated);
-    setActionNotice('✨ 31밴드 기준값을 바탕으로 61개 전체 주파수가 부드럽게 자동 보간되었습니다.');
+    setActionNotice('✨ 조절하신 주파수를 바탕으로 31개 전체 대역이 부드럽게 자동 완성되었습니다.');
     setTimeout(() => setActionNotice(null), 3500);
 
     if (isPlaying) {
@@ -322,10 +333,10 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               </button>
             </div>
 
-            {eqMode === '61-band' && (
+            {eqMode === '31-band' && (
               <button
-                onClick={handleAutoFill31To61}
-                title="31밴드 기준값을 바탕으로 61개 중간 주파수 대역을 자동으로 채웁니다"
+                onClick={handleAutoFill31}
+                title="조절하신 주요 주파수 값을 바탕으로 31개 전체 대역을 부드럽게 자동 완성합니다"
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/70 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 cursor-pointer shadow-xs"
               >
                 <Sparkles className="w-3.5 h-3.5" />
