@@ -19,6 +19,7 @@ import GitHubButton from 'react-github-btn';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'guide' | 'calibrate' | 'abtest' | 'export'>('guide');
+  const [eqMode, setEqMode] = useState<'31-band' | '61-band'>('31-band');
   const [calibrations, setCalibrations] = useState<BandState[]>(() => getDefaultBands());
   const [masterVolume, setMasterVolume] = useState<number>(0.5);
   // 내 음악 파일명 상태를 상위 App으로 승격하여 탭 전환 시에도 유지
@@ -198,6 +199,8 @@ export function App() {
 
         {activeTab === 'calibrate' && (
           <WizardCalibration
+            eqMode={eqMode}
+            setEqMode={setEqMode}
             calibrations={calibrations}
             setCalibrations={setCalibrations}
             onGoToABTest={() => setActiveTab('abtest')}
@@ -207,6 +210,7 @@ export function App() {
 
         {activeTab === 'abtest' && (
           <ABTestPage
+            eqMode={eqMode}
             calibrations={calibrations}
             customFileName={customFileName}
             setCustomFileName={setCustomFileName}
@@ -217,6 +221,7 @@ export function App() {
 
         {activeTab === 'export' && (
           <ExportAPOPage
+            eqMode={eqMode}
             calibrations={calibrations}
             setCalibrations={setCalibrations}
             onBackToABTest={() => setActiveTab('abtest')}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { audioEngine } from '../audio/AudioEngine';
-import { FREQUENCY_BANDS } from '../data/iso226';
+import { FREQUENCY_BANDS_61 } from '../data/iso226';
 import {
   Play,
   Pause,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 
 interface ABTestPageProps {
+  eqMode?: '31-band' | '61-band';
   calibrations: { leftDb: number; rightDb: number; phaseInvert: boolean }[];
   customFileName: string | null;
   setCustomFileName: (name: string | null) => void;
@@ -22,6 +23,7 @@ interface ABTestPageProps {
 }
 
 export const ABTestPage: React.FC<ABTestPageProps> = ({
+  eqMode = '31-band',
   calibrations,
   customFileName,
   setCustomFileName,
@@ -44,10 +46,16 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
 
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  const bandData = FREQUENCY_BANDS.map((b, i) => ({
+  const activeBands =
+    eqMode === '61-band'
+      ? FREQUENCY_BANDS_61
+      : FREQUENCY_BANDS_61.filter((b) => b.is31Band);
+
+  const bandData = activeBands.map((b) => ({
     freq: b.freq,
-    leftDb: calibrations[i]?.leftDb || 0,
-    rightDb: calibrations[i]?.rightDb || 0,
+    leftDb: calibrations[b.id]?.leftDb || 0,
+    rightDb: calibrations[b.id]?.rightDb || 0,
+    q: eqMode === '61-band' ? 8.65 : 4.31,
   }));
 
   // 재생 시간 실시간 업데이트 타이머

@@ -59,15 +59,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         </div>
 
         <div>
-          {channelMode === 'left' ? (
-            <span className="text-[#0f62fe] dark:text-[#78a9ff] bg-[#edf5ff] dark:bg-[#002d9c]/30 px-2.5 py-0.5 rounded border border-[#d0e2ff] dark:border-[#0043ce] text-[11px] font-semibold">
-              L 채널 단독 출력 중
-            </span>
-          ) : channelMode === 'right' ? (
-            <span className="text-[#0f62fe] dark:text-[#78a9ff] bg-[#edf5ff] dark:bg-[#002d9c]/30 px-2.5 py-0.5 rounded border border-[#d0e2ff] dark:border-[#0043ce] text-[11px] font-semibold">
-              R 채널 단독 출력 중
-            </span>
-          ) : isBalanced ? (
+          {isBalanced ? (
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 text-[11px]">
               <CheckCircle2 className="w-3.5 h-3.5" /> 양쪽 귀 균형 일치
             </span>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FREQUENCY_BANDS,
+  FREQUENCY_BANDS_61,
+  THIRTY_ONE_BAND_INDICES_IN_61,
   FrequencyBand,
+  interpolate31to61Bands,
 } from '../data/iso226';
 import { audioEngine } from '../audio/AudioEngine';
 import { HeadVisualizer } from '../components/HeadVisualizer';
@@ -14,26 +16,32 @@ import {
   Lock,
   ArrowRight,
   Info,
+  Sparkles,
 } from 'lucide-react';
+import { BandState } from '../store/calibrationStore';
 
 interface WizardCalibrationProps {
-  mode?: '10-band' | '31-band';
-  setMode?: (mode: '10-band' | '31-band') => void;
-  calibrations: { leftDb: number; rightDb: number; phaseInvert: boolean }[];
-  setCalibrations: React.Dispatch<
-    React.SetStateAction<{ leftDb: number; rightDb: number; phaseInvert: boolean }[]>
-  >;
+  eqMode: '31-band' | '61-band';
+  setEqMode: (mode: '31-band' | '61-band') => void;
+  calibrations: BandState[];
+  setCalibrations: React.Dispatch<React.SetStateAction<BandState[]>>;
   onGoToABTest: () => void;
   onGoToExport: () => void;
 }
 
 export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
+  eqMode,
+  setEqMode,
   calibrations,
   setCalibrations,
   onGoToABTest,
 }) => {
-  // 31단계 단독 전면 제공
-  const activeBandIndices = FREQUENCY_BANDS.map((_, i) => i);
+  // 31밴드 모드: 61개 중 31개 표준 짝수 대역만 활성화
+  // 61밴드 모드: 1/6 옥타브 전체 61개 대역 활성화
+  const activeBandIndices =
+    eqMode === '61-band'
+      ? FREQUENCY_BANDS_61.map((_, i) => i)
+      : THIRTY_ONE_BAND_INDICES_IN_61;
 
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -41,11 +49,64 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   const [channelMode, setChannelMode] = useState<'left' | 'center' | 'right'>('center');
 
   const currentBandId = activeBandIndices[currentStepIndex] ?? 0;
-  const currentBandInfo: FrequencyBand = FREQUENCY_BANDS[currentBandId];
+  const rawBandInfo = FREQUENCY_BANDS_61[currentBandId] || FREQUENCY_BANDS_61[0];
+  const currentBandInfo: FrequencyBand = {
+    ...rawBandInfo,
+    q: eqMode === '61-band' ? 8.65 : 4.31,
+  };
+
   const currentBandCalib = calibrations[currentBandId] || {
     leftDb: 0,
     rightDb: 0,
     phaseInvert: false,
+  };
+
+  // 모드 변경 (31밴드 <-> 61밴드) 시 현재 주파수 위치를 가장 가까운 스텝으로 보존
+  const handleModeChange = (newMode: '31-band' | '61-band') => {
+    if (newMode === eqMode) return;
+    const prevBandId = currentBandId;
+    setEqMode(newMode);
+
+    const newActiveIndices =
+      newMode === '61-band'
+        ? FREQUENCY_BANDS_61.map((_, i) => i)
+        : THIRTY_ONE_BAND_INDICES_IN_61;
+
+    let targetStep = newActiveIndices.indexOf(prevBandId);
+    if (targetStep === -1) {
+      let closestStep = 0;
+      let minDiff = 999999;
+      newActiveIndices.forEach((id, step) => {
+        const diff = Math.abs(id - prevBandId);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestStep = step;
+        }
+      });
+      targetStep = closestStep;
+    }
+    setCurrentStepIndex(targetStep);
+  };
+
+  // 61밴드 모드에서 31밴드 기준값을 바탕으로 중간 1/6 옥타브 홀수 대역 자동 보간 채우기
+  const handleAutoFill31To61 = () => {
+    const updated = interpolate31to61Bands(calibrations);
+    setCalibrations(updated);
+    setActionNotice('✨ 31밴드 기준값을 바탕으로 61개 전체 주파수가 부드럽게 자동 보간되었습니다.');
+    setTimeout(() => setActionNotice(null), 3500);
+
+    if (isPlaying) {
+      const activeId = activeBandIndices[currentStepIndex] ?? 0;
+      const bInfo = FREQUENCY_BANDS_61[activeId];
+      const bCalib = updated[activeId] || { leftDb: 0, rightDb: 0, phaseInvert: false };
+      audioEngine.updateToneParams(
+        bCalib.leftDb,
+        bCalib.rightDb,
+        bCalib.phaseInvert,
+        bInfo.isoCompDb,
+        channelMode
+      );
+    }
   };
 
   const handleToggleSound = async () => {
@@ -119,63 +180,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  // 좌우 채널 반전 (Swap L/R) 기능 - 검증 및 완벽 구현
-  const handleSwapChannels = () => {
-    const currentL = currentBandCalib.leftDb;
-    const currentR = currentBandCalib.rightDb;
-
-    if (currentL === 0 && currentR === 0) {
-      setActionNotice('💡 현재 좌/우 보정값이 모두 0.0 dB라 동일합니다. 슬라이더를 조절한 후 맞바꿔보세요.');
-      setTimeout(() => setActionNotice(null), 3000);
-      return;
-    }
-
-    const updated = [...calibrations];
-    updated[currentBandId] = {
-      ...updated[currentBandId],
-      leftDb: currentR,
-      rightDb: currentL,
-    };
-    setCalibrations(updated);
-
-    if (isPlaying) {
-      audioEngine.updateToneParams(
-        currentR,
-        currentL,
-        currentBandCalib.phaseInvert,
-        currentBandInfo.isoCompDb,
-        channelMode
-      );
-    }
-
-    setActionNotice(`⇄ 좌/우 채널 보정값이 맞바뀌었습니다! (L: ${currentR > 0 ? '+' : ''}${currentR.toFixed(1)} dB / R: ${currentL > 0 ? '+' : ''}${currentL.toFixed(1)} dB)`);
-    setTimeout(() => setActionNotice(null), 3500);
-  };
-
-  // 위상 반전 (Phase Invert) 기능
-  const handleTogglePhase = () => {
-    const newPhase = !currentBandCalib.phaseInvert;
-    const updated = [...calibrations];
-    updated[currentBandId] = {
-      ...updated[currentBandId],
-      phaseInvert: newPhase,
-    };
-    setCalibrations(updated);
-
-    if (isPlaying) {
-      audioEngine.updateToneParams(
-        currentBandCalib.leftDb,
-        currentBandCalib.rightDb,
-        newPhase,
-        currentBandInfo.isoCompDb,
-        channelMode
-      );
-    }
-
-    setActionNotice(newPhase ? '⚡ 180° 위상 반전이 켜졌습니다 (소리를 모아줍니다).' : '위상이 정상(0°)으로 복구되었습니다.');
-    setTimeout(() => setActionNotice(null), 3000);
-  };
-
   const handleResetCurrent = () => {
     const updated = [...calibrations];
     updated[currentBandId] = { leftDb: 0, rightDb: 0, phaseInvert: false };
@@ -190,7 +194,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     setCurrentStepIndex(newStep);
 
     const nextBandId = activeBandIndices[newStep];
-    const nextBandInfo = FREQUENCY_BANDS[nextBandId];
+    const nextBandInfo = FREQUENCY_BANDS_61[nextBandId];
     const nextCalib = calibrations[nextBandId] || { leftDb: 0, rightDb: 0, phaseInvert: false };
 
     if (isPlaying) {
@@ -213,7 +217,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
   return (
     <div className="flex flex-col justify-start items-stretch gap-3.5 w-full">
-      {/* 1. 최상단으로 이동한 핵심 내비게이션 & 제어 바 (IBM Carbon Card) - 31밴드 좌우 꽉 차게 배치 */}
+      {/* 1. 최상단으로 이동한 핵심 내비게이션 & 제어 바 (IBM Carbon Card) - 31/61밴드 좌우 꽉 차게 배치 */}
       <div className="p-2.5 carbon-card rounded-xl shadow-xs flex items-center justify-between gap-2 sm:gap-3 text-xs w-full">
         {/* 이전 음높이 버튼 */}
         <button
@@ -225,21 +229,21 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           <span>이전</span>
         </button>
 
-        {/* 31개 주파수 대역 인터랙티브 내비게이션 바 (반응형으로 좌우 꽉 차고 클릭하기 편한 크기로 개편) */}
+        {/* 주파수 대역 인터랙티브 내비게이션 바 (반응형으로 좌우 꽉 차고 클릭하기 편한 크기로 개편) */}
         <div className="flex-1 flex items-center justify-between gap-0.5 sm:gap-1 py-1 px-1 min-w-0">
           {activeBandIndices.map((bIdx, idx) => {
             const isDone =
-              calibrations[bIdx].leftDb !== 0 ||
-              calibrations[bIdx].rightDb !== 0 ||
-              calibrations[bIdx].phaseInvert;
+              calibrations[bIdx]?.leftDb !== 0 ||
+              calibrations[bIdx]?.rightDb !== 0 ||
+              calibrations[bIdx]?.phaseInvert;
             const isCurrent = idx === currentStepIndex;
 
             return (
               <button
                 key={bIdx}
                 onClick={() => handleStepChange(idx)}
-                title={`${FREQUENCY_BANDS[bIdx].label} (${FREQUENCY_BANDS[bIdx].freq}Hz)${isDone ? ' [보정됨]' : ''}`}
-                className={`flex-1 h-5 sm:h-6 min-w-[5px] sm:min-w-[8px] rounded-xs sm:rounded-sm transition-all duration-150 cursor-pointer relative ${
+                title={`${FREQUENCY_BANDS_61[bIdx].label} (${FREQUENCY_BANDS_61[bIdx].freq}Hz)${isDone ? ' [보정됨]' : ''}`}
+                className={`flex-1 h-5 sm:h-6 min-w-[3px] sm:min-w-[6px] rounded-xs sm:rounded-sm transition-all duration-150 cursor-pointer relative ${
                   isCurrent
                     ? 'bg-[#0f62fe] ring-2 ring-[#0f62fe]/50 scale-y-110 z-10 shadow-xs'
                     : isDone
@@ -291,6 +295,45 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
         {/* 우측 7컬럼: 좌/우 채널 분리 조절 슬라이더 및 보조 도구 패널 (h-full & justify-between) */}
         <div className="md:col-span-7 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3.5">
+          {/* [우측 카드 최상단] 31밴드 / 61밴드 정밀 모드 토글 & 61밴드 전용 31밴드 자동 채우기 버튼 */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-1.5 bg-[#f4f4f4] dark:bg-[#161616] rounded-lg border border-[#e0e0e0] dark:border-[#393939]">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => handleModeChange('31-band')}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                  eqMode === '31-band'
+                    ? 'bg-white dark:bg-[#262626] text-[#0f62fe] dark:text-[#78a9ff] shadow-xs font-bold'
+                    : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+                }`}
+                title="1/3 옥타브 표준 31밴드 (Q=4.31)"
+              >
+                31밴드 표준 (Q=4.31)
+              </button>
+              <button
+                onClick={() => handleModeChange('61-band')}
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                  eqMode === '61-band'
+                    ? 'bg-[#0f62fe] text-white shadow-xs font-bold'
+                    : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+                }`}
+                title="1/6 옥타브 초정밀 61밴드 (Q=8.65)"
+              >
+                61밴드 초정밀 (Q=8.65)
+              </button>
+            </div>
+
+            {eqMode === '61-band' && (
+              <button
+                onClick={handleAutoFill31To61}
+                title="31밴드 기준값을 바탕으로 61개 중간 주파수 대역을 자동으로 채웁니다"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-bold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/70 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 cursor-pointer shadow-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>31밴드 자동 채우기</span>
+              </button>
+            )}
+          </div>
+
           {/* 보청기 원리 기반 권장 안내 팁 배너, 볼륨/청력 안전 주의 문구 및 착용상태/이압 안내 요약 */}
           <div className="p-2.5 rounded-lg bg-[#edf5ff] dark:bg-[#002d9c]/25 border border-[#d0e2ff] dark:border-[#0043ce]/60 space-y-1.5 text-[11px]">
             <div className="flex items-start gap-2 text-[#0043ce] dark:text-[#78a9ff]">
@@ -382,7 +425,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                   </div>
                 </div>
                 <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d] mt-0.5">
-                  인간 청각 특성에 맞춰 시스템이 자동 보정 (임의 변경 잠금)
+                  인간 청각 특성에 맞춰 시스템이 자동 보정 ({eqMode === '61-band' ? '61밴드 초정밀 Q=8.65' : '31밴드 표준 Q=4.31'})
                 </div>
               </div>
             </div>
@@ -394,10 +437,6 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 : '0.0 dB (기준음)'}
             </div>
           </div>
-
-          {/* 좌/우 채널 반전 (Swap L/R) 기능은 사용자 요청에 따라 UI에서 임시 숨김 처리 */}
-
-          {/* 위상 반전 기능은 추후 기능에 대해 명확히 파악 후 추가할 예정으로 임시 숨김 처리 */}
         </div>
       </div>
     </div>

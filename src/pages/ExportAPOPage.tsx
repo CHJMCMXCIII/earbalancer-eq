@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { generateAPOConfigText, downloadAPOConfigFile } from '../tauri/tauriBridge';
-import { FREQUENCY_BANDS } from '../data/iso226';
+import { FREQUENCY_BANDS_61 } from '../data/iso226';
 import {
   Profile,
   loadSavedProfiles,
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 
 interface ExportAPOPageProps {
+  eqMode?: '31-band' | '61-band';
   calibrations: BandState[];
   setCalibrations: React.Dispatch<React.SetStateAction<BandState[]>>;
   onBackToABTest: () => void;
@@ -31,6 +32,7 @@ interface ExportAPOPageProps {
 }
 
 export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
+  eqMode = '31-band',
   calibrations,
   setCalibrations,
   onBackToABTest,
@@ -58,10 +60,15 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     setPreampDb(suggestedPreamp);
   }, [suggestedPreamp]);
 
-  const bandExportList = FREQUENCY_BANDS.map((b, i) => ({
+  const activeBands =
+    eqMode === '61-band'
+      ? FREQUENCY_BANDS_61
+      : FREQUENCY_BANDS_61.filter((b) => b.is31Band);
+
+  const bandExportList = activeBands.map((b) => ({
     freq: b.freq,
-    leftDb: calibrations[i]?.leftDb || 0,
-    rightDb: calibrations[i]?.rightDb || 0,
+    leftDb: calibrations[b.id]?.leftDb || 0,
+    rightDb: calibrations[b.id]?.rightDb || 0,
   }));
 
   const apoConfigText = generateAPOConfigText({
@@ -131,7 +138,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     const newProfile: Profile = {
       id: existingIdx >= 0 ? profiles[existingIdx].id : `profile-${Date.now()}`,
       name: profileName,
-      mode: '31-band',
+      mode: eqMode,
       updatedAt: new Date().toISOString(),
       calibrations: [...calibrations],
     };
@@ -156,7 +163,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
     const currentProfileToSave: Profile = {
       id: existingIdx >= 0 ? profiles[existingIdx].id : `profile-${Date.now()}`,
       name: profileName,
-      mode: '31-band',
+      mode: eqMode,
       updatedAt: new Date().toISOString(),
       calibrations: [...calibrations],
     };

@@ -257,7 +257,7 @@ export class AudioEngine {
    * A/B 비교 테스트 재생 (특정 오프셋 위치에서 시작 가능)
    */
   public async startABTest(
-    calibrations: { freq: number; leftDb: number; rightDb: number }[],
+    calibrations: { freq: number; leftDb: number; rightDb: number; q?: number }[],
     bypass: boolean = false,
     offsetSeconds: number = 0
   ) {
@@ -289,24 +289,28 @@ export class AudioEngine {
     this.abEqGain = ctx.createGain();
     this.abEqGain.gain.setValueAtTime(!bypass ? gainMatchLinear : 0.0, now);
 
-    // 3. 31밴드 스테레오 필터 체인
+    // 3. 다중 밴드(31/61밴드) 스테레오 필터 체인
     const splitter = ctx.createChannelSplitter(2);
     const merger = ctx.createChannelMerger(2);
 
     let prevLeft: AudioNode = splitter;
     let prevRight: AudioNode = splitter;
 
+    const defaultQ = calibrations.length > 31 ? 8.65 : 4.31;
+
     calibrations.forEach((b, idx) => {
+      const qVal = b.q !== undefined ? b.q : defaultQ;
+
       const leftFilt = ctx.createBiquadFilter();
       leftFilt.type = 'peaking';
       leftFilt.frequency.setValueAtTime(b.freq, now);
-      leftFilt.Q.setValueAtTime(4.31, now);
+      leftFilt.Q.setValueAtTime(qVal, now);
       leftFilt.gain.setValueAtTime(b.leftDb, now);
 
       const rightFilt = ctx.createBiquadFilter();
       rightFilt.type = 'peaking';
       rightFilt.frequency.setValueAtTime(b.freq, now);
-      rightFilt.Q.setValueAtTime(4.31, now);
+      rightFilt.Q.setValueAtTime(qVal, now);
       rightFilt.gain.setValueAtTime(b.rightDb, now);
 
       if (idx === 0) {
@@ -361,7 +365,7 @@ export class AudioEngine {
   /**
    * 일시정지 후 재개 (Resume)
    */
-  public async resumeABTest(calibrations: { freq: number; leftDb: number; rightDb: number }[]) {
+  public async resumeABTest(calibrations: { freq: number; leftDb: number; rightDb: number; q?: number }[]) {
     await this.startABTest(calibrations, this.abBypass, this.abPausedAt);
   }
 
@@ -370,7 +374,7 @@ export class AudioEngine {
    */
   public async seekABTest(
     targetSeconds: number,
-    calibrations: { freq: number; leftDb: number; rightDb: number }[]
+    calibrations: { freq: number; leftDb: number; rightDb: number; q?: number }[]
   ) {
     this.abPausedAt = targetSeconds;
     if (this.abIsPlaying) {
