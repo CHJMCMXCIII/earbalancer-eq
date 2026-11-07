@@ -13,7 +13,6 @@ import {
   RotateCcw,
   Lock,
   ArrowRight,
-  ArrowLeftRight,
   Info,
 } from 'lucide-react';
 
@@ -39,6 +38,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [channelMode, setChannelMode] = useState<'left' | 'center' | 'right'>('center');
 
   const currentBandId = activeBandIndices[currentStepIndex] ?? 0;
   const currentBandInfo: FrequencyBand = FREQUENCY_BANDS[currentBandId];
@@ -58,9 +58,23 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentBandCalib.leftDb,
         currentBandCalib.rightDb,
         currentBandCalib.phaseInvert,
-        currentBandInfo.isoCompDb
+        currentBandInfo.isoCompDb,
+        channelMode
       );
       setIsPlaying(true);
+    }
+  };
+
+  const handleSelectChannelMode = (mode: 'left' | 'center' | 'right') => {
+    setChannelMode(mode);
+    if (isPlaying) {
+      audioEngine.updateToneParams(
+        currentBandCalib.leftDb,
+        currentBandCalib.rightDb,
+        currentBandCalib.phaseInvert,
+        currentBandInfo.isoCompDb,
+        mode
+      );
     }
   };
 
@@ -79,7 +93,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         rounded,
         currentBandCalib.rightDb,
         currentBandCalib.phaseInvert,
-        currentBandInfo.isoCompDb
+        currentBandInfo.isoCompDb,
+        channelMode
       );
     }
   };
@@ -98,7 +113,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentBandCalib.leftDb,
         rounded,
         currentBandCalib.phaseInvert,
-        currentBandInfo.isoCompDb
+        currentBandInfo.isoCompDb,
+        channelMode
       );
     }
   };
@@ -127,7 +143,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentR,
         currentL,
         currentBandCalib.phaseInvert,
-        currentBandInfo.isoCompDb
+        currentBandInfo.isoCompDb,
+        channelMode
       );
     }
 
@@ -150,7 +167,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         currentBandCalib.leftDb,
         currentBandCalib.rightDb,
         newPhase,
-        currentBandInfo.isoCompDb
+        currentBandInfo.isoCompDb,
+        channelMode
       );
     }
 
@@ -163,7 +181,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     updated[currentBandId] = { leftDb: 0, rightDb: 0, phaseInvert: false };
     setCalibrations(updated);
     if (isPlaying) {
-      audioEngine.updateToneParams(0, 0, false, currentBandInfo.isoCompDb);
+      audioEngine.updateToneParams(0, 0, false, currentBandInfo.isoCompDb, channelMode);
     }
   };
 
@@ -181,7 +199,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         nextCalib.leftDb,
         nextCalib.rightDb,
         nextCalib.phaseInvert,
-        nextBandInfo.isoCompDb
+        nextBandInfo.isoCompDb,
+        channelMode
       );
     }
   };
@@ -265,6 +284,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             onToggleSound={handleToggleSound}
             onResetCurrent={handleResetCurrent}
             actionNotice={actionNotice}
+            channelMode={channelMode}
+            onSelectChannelMode={handleSelectChannelMode}
           />
         </div>
 
@@ -366,36 +387,15 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               </div>
             </div>
             <div className="bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] px-2 py-0.5 rounded font-mono text-[11px] font-bold text-[#161616] dark:text-[#f4f4f4] flex-shrink-0 shadow-xs">
-              +{currentBandInfo.isoCompDb.toFixed(1)} dB 보정됨
+              {currentBandInfo.isoCompDb > 0
+                ? `+${currentBandInfo.isoCompDb.toFixed(1)} dB (음량 보강)`
+                : currentBandInfo.isoCompDb < 0
+                ? `${currentBandInfo.isoCompDb.toFixed(1)} dB (음량 감쇄)`
+                : '0.0 dB (기준음)'}
             </div>
           </div>
 
-          {/* 보조 기능 1: 좌우 채널 반전 (Swap L/R) (i 아이콘 툴팁 추가) */}
-          <div className="p-2.5 carbon-subcard rounded-lg flex items-center justify-between gap-2.5 text-xs">
-            <div className="space-y-0.5">
-              <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs">
-                <ArrowLeftRight className="w-3.5 h-3.5 text-[#0f62fe]" />
-                <span>좌/우 채널 반전 (Swap L/R)</span>
-                <div className="relative group/tip inline-flex items-center">
-                  <Info className="w-3.5 h-3.5 text-[#0f62fe] cursor-help" />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
-                    <strong>좌우 채널 반전이란?</strong><br />
-                    이어폰을 반대로 착용했는지 점검하거나, 양쪽 귀의 감도 균형을 서로 맞바꾸어 역비교해보고 싶을 때 버튼 하나로 왼쪽과 오른쪽 수치를 즉시 교체합니다.
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
-                  </div>
-                </div>
-              </div>
-              <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-                헤드폰 착용 상태를 점검하거나 양쪽 밸런스를 반대로 비교해볼 때 좌우 값을 맞바꿉니다
-              </div>
-            </div>
-            <button
-              onClick={handleSwapChannels}
-              className="flex-shrink-0 px-3 py-1.5 rounded text-xs font-semibold bg-white hover:bg-[#e8e8e8] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer shadow-xs"
-            >
-              채널 맞바꾸기
-            </button>
-          </div>
+          {/* 좌/우 채널 반전 (Swap L/R) 기능은 사용자 요청에 따라 UI에서 임시 숨김 처리 */}
 
           {/* 위상 반전 기능은 추후 기능에 대해 명확히 파악 후 추가할 예정으로 임시 숨김 처리 */}
         </div>

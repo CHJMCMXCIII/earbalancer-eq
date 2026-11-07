@@ -35,13 +35,13 @@ export const FREQUENCY_BANDS: FrequencyBand[] = [
   { id: 21, freq: 2500, label: "2.5 kHz", is10Band: false, isoCompDb: -3.2, description: "중고음 (선명도와 귀의 피로도 영향)" },
   { id: 22, freq: 3150, label: "3.15 kHz", is10Band: false, isoCompDb: -3.8, description: "고음 (인간의 귀가 가장 민감한 정점)" },
   { id: 23, freq: 4000, label: "4 kHz", is10Band: true, isoCompDb: -3.2, description: "고음 (금속성 어택감과 존재감)" },
-  { id: 24, freq: 5000, label: "5 kHz", is10Band: false, isoCompDb: -1.5, description: "고음 (기타 피크 소리, 보컬의 숨결)" },
-  { id: 25, freq: 6300, label: "6.3 kHz", is10Band: false, isoCompDb: 1.0, description: "초고음 (치찰음: 시옷/치읓 발음)" },
-  { id: 26, freq: 8000, label: "8 kHz", is10Band: true, isoCompDb: 3.5, description: "초고음 (심벌즈의 찰랑거림)" },
-  { id: 27, freq: 10000, label: "10 kHz", is10Band: false, isoCompDb: 6.0, description: "초고음 (투명한 공간감과 공기감)" },
-  { id: 28, freq: 12500, label: "12.5 kHz", is10Band: false, isoCompDb: 9.0, description: "초고음 (반짝이는 디테일)" },
-  { id: 29, freq: 16000, label: "16 kHz", is10Band: true, isoCompDb: 14.0, description: "극고음 (귀 끝에서 흩어지는 공기 소리)" },
-  { id: 30, freq: 20000, label: "20 kHz", is10Band: false, isoCompDb: 22.0, description: "극고음 (가청 주파수의 한계 영역)" },
+  { id: 24, freq: 5000, label: "5 kHz", is10Band: false, isoCompDb: -2.0, description: "고음 (기타 피크 소리, 보컬의 숨결)" },
+  { id: 25, freq: 6300, label: "6.3 kHz", is10Band: false, isoCompDb: -2.8, description: "초고음 (치찰음: 시옷/치읓 발음)" },
+  { id: 26, freq: 8000, label: "8 kHz", is10Band: true, isoCompDb: -3.5, description: "초고음 (심벌즈의 찰랑거림, 외이도 감도 감쇄)" },
+  { id: 27, freq: 10000, label: "10 kHz", is10Band: false, isoCompDb: -1.5, description: "초고음 (투명한 공간감과 공기감)" },
+  { id: 28, freq: 12500, label: "12.5 kHz", is10Band: false, isoCompDb: 0.0, description: "초고음 (반짝이는 디테일)" },
+  { id: 29, freq: 16000, label: "16 kHz", is10Band: true, isoCompDb: 4.0, description: "극고음 (귀 끝에서 흩어지는 공기 소리)" },
+  { id: 30, freq: 20000, label: "20 kHz", is10Band: false, isoCompDb: 9.0, description: "극고음 (가청 주파수의 한계 영역)" },
 ];
 
 export const TEN_BAND_INDICES = FREQUENCY_BANDS

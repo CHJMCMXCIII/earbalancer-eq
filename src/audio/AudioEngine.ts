@@ -20,6 +20,7 @@ export class AudioEngine {
   private oscMerger: ChannelMergerNode | null = null;
   private toneActive: boolean = false;
   private currentFrequency: number = 1000;
+  private currentChannelMode: 'left' | 'center' | 'right' = 'center';
 
   // A/B 테스트용 오디오 재생기 (재생/일시정지/탐색 지원)
   private abSourceNode: AudioBufferSourceNode | null = null;
@@ -77,7 +78,8 @@ export class AudioEngine {
     leftDb: number = 0,
     rightDb: number = 0,
     phaseInvert: boolean = false,
-    isoOffsetDb: number = 0
+    isoOffsetDb: number = 0,
+    channelMode: 'left' | 'center' | 'right' = 'center'
   ) {
     await this.ensureContext();
     if (!this.ctx || !this.masterGain) return;
@@ -85,6 +87,7 @@ export class AudioEngine {
     this.stopTone();
 
     this.currentFrequency = freq;
+    this.currentChannelMode = channelMode;
     const now = this.ctx.currentTime;
 
     this.osc = this.ctx.createOscillator();
@@ -92,12 +95,25 @@ export class AudioEngine {
     this.osc.frequency.setValueAtTime(freq, now);
 
     const baseLinear = 0.15;
-    const clampedIso = Math.min(22, Math.max(-10, isoOffsetDb * 0.6));
-    const effectiveLeftDb = leftDb + clampedIso;
-    const effectiveRightDb = rightDb + clampedIso;
+    // 등청감 보정 오프셋 적용:
+    // 고역대/중고역대 감쇄(음수 dB)는 인간 청각 보호 및 균일 체감 음량을 위해 온전히 반영 (최대 -12dB)
+    // 저역대 증폭(양수 dB)은 디지털 클리핑 방지를 위해 적절히 스케일링 (최대 +16dB)
+    const effectiveIso = isoOffsetDb <= 0
+      ? Math.max(-12, isoOffsetDb)
+      : Math.min(16, isoOffsetDb * 0.55);
 
-    const leftLinear = baseLinear * Math.pow(10, effectiveLeftDb / 20);
-    const rightLinear = baseLinear * Math.pow(10, effectiveRightDb / 20) * (phaseInvert ? -1 : 1);
+    const effectiveLeftDb = leftDb + effectiveIso;
+    const effectiveRightDb = rightDb + effectiveIso;
+
+    let leftLinear = baseLinear * Math.pow(10, effectiveLeftDb / 20);
+    let rightLinear = baseLinear * Math.pow(10, effectiveRightDb / 20) * (phaseInvert ? -1 : 1);
+
+    // L, Center, R 단독/양쪽 채널 제어
+    if (this.currentChannelMode === 'left') {
+      rightLinear = 0.0001;
+    } else if (this.currentChannelMode === 'right') {
+      leftLinear = 0.0001;
+    }
 
     this.oscLeftGain = this.ctx.createGain();
     this.oscRightGain = this.ctx.createGain();
@@ -126,18 +142,33 @@ export class AudioEngine {
     leftDb: number,
     rightDb: number,
     phaseInvert: boolean,
-    isoOffsetDb: number = 0
+    isoOffsetDb: number = 0,
+    channelMode?: 'left' | 'center' | 'right'
   ) {
     if (!this.ctx || !this.toneActive || !this.oscLeftGain || !this.oscRightGain) return;
 
+    if (channelMode) {
+      this.currentChannelMode = channelMode;
+    }
+
     const now = this.ctx.currentTime;
     const baseLinear = 0.15;
-    const clampedIso = Math.min(22, Math.max(-10, isoOffsetDb * 0.6));
-    const effectiveLeftDb = leftDb + clampedIso;
-    const effectiveRightDb = rightDb + clampedIso;
+    const effectiveIso = isoOffsetDb <= 0
+      ? Math.max(-12, isoOffsetDb)
+      : Math.min(16, isoOffsetDb * 0.55);
 
-    const leftLinear = Math.max(0.0001, baseLinear * Math.pow(10, effectiveLeftDb / 20));
-    const rightLinear = (phaseInvert ? -1 : 1) * Math.max(0.0001, baseLinear * Math.pow(10, effectiveRightDb / 20));
+    const effectiveLeftDb = leftDb + effectiveIso;
+    const effectiveRightDb = rightDb + effectiveIso;
+
+    let leftLinear = Math.max(0.0001, baseLinear * Math.pow(10, effectiveLeftDb / 20));
+    let rightLinear = (phaseInvert ? -1 : 1) * Math.max(0.0001, baseLinear * Math.pow(10, effectiveRightDb / 20));
+
+    // L, Center, R 단독/양쪽 채널 제어
+    if (this.currentChannelMode === 'left') {
+      rightLinear = 0.0001;
+    } else if (this.currentChannelMode === 'right') {
+      leftLinear = 0.0001;
+    }
 
     this.oscLeftGain.gain.setTargetAtTime(leftLinear, now, 0.015);
     this.oscRightGain.gain.setTargetAtTime(rightLinear, now, 0.015);

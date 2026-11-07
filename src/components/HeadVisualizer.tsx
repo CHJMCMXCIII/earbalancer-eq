@@ -11,6 +11,8 @@ interface HeadVisualizerProps {
   onToggleSound?: () => void;
   onResetCurrent?: () => void;
   actionNotice?: string | null;
+  channelMode?: 'left' | 'center' | 'right';
+  onSelectChannelMode?: (mode: 'left' | 'center' | 'right') => void;
 }
 
 export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
@@ -22,6 +24,8 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   onToggleSound,
   onResetCurrent,
   actionNotice,
+  channelMode = 'center',
+  onSelectChannelMode,
 }) => {
   const leftAmp = Math.max(0.3, Math.min(2.0, 1.0 + leftDb / 12));
   const rightAmp = Math.max(0.3, Math.min(2.0, 1.0 + rightDb / 12));
@@ -33,8 +37,15 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   const leftWaveMove = leftDb * 2.0;
   const rightWaveMove = rightDb * 2.0;
 
-  // 소리 중심점(음상) 좌우 이동 거리 (diffDb에 따라 두상 내부에서 ±32px까지 두드러지게 이동)
-  const soundCenterShift = Math.max(-32, Math.min(32, diffDb * 2.8));
+  // 소리 중심점(음상) 좌우 이동 거리 (diffDb에 따라 두상 내부에서 ±32px까지 두드러지게 이동, L/R 단독 선택 시 해당 방향으로 이동)
+  const soundCenterShift = channelMode === 'left'
+    ? -32
+    : channelMode === 'right'
+    ? 32
+    : Math.max(-32, Math.min(32, diffDb * 2.8));
+
+  const isLeftActive = channelMode === 'left' || channelMode === 'center';
+  const isRightActive = channelMode === 'right' || channelMode === 'center';
 
   return (
     <div className="relative flex flex-col items-center justify-between p-4 carbon-card rounded-xl shadow-xs overflow-hidden h-full">
@@ -48,7 +59,15 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         </div>
 
         <div>
-          {isBalanced ? (
+          {channelMode === 'left' ? (
+            <span className="text-[#0f62fe] dark:text-[#78a9ff] bg-[#edf5ff] dark:bg-[#002d9c]/30 px-2.5 py-0.5 rounded border border-[#d0e2ff] dark:border-[#0043ce] text-[11px] font-semibold">
+              L 채널 단독 출력 중
+            </span>
+          ) : channelMode === 'right' ? (
+            <span className="text-[#0f62fe] dark:text-[#78a9ff] bg-[#edf5ff] dark:bg-[#002d9c]/30 px-2.5 py-0.5 rounded border border-[#d0e2ff] dark:border-[#0043ce] text-[11px] font-semibold">
+              R 채널 단독 출력 중
+            </span>
+          ) : isBalanced ? (
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 text-[11px]">
               <CheckCircle2 className="w-3.5 h-3.5" /> 양쪽 귀 균형 일치
             </span>
@@ -126,25 +145,25 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             <path
               d="M -5 -28 A 32 32 0 0 0 -5 28"
               fill="none"
-              stroke="#0f62fe"
+              stroke={isLeftActive ? "#0f62fe" : "#8d8d8d"}
               strokeWidth={Math.max(1.2, 1.8 * leftAmp)}
-              opacity={isPlaying ? 0.95 : 0.4}
+              opacity={isPlaying && isLeftActive ? 0.95 : isLeftActive ? 0.4 : 0.08}
               strokeLinecap="round"
             />
             <path
               d="M -16 -40 A 48 48 0 0 0 -16 40"
               fill="none"
-              stroke="#4589ff"
+              stroke={isLeftActive ? "#4589ff" : "#8d8d8d"}
               strokeWidth={Math.max(0.8, 1.2 * leftAmp)}
-              opacity={isPlaying ? 0.7 : 0.25}
+              opacity={isPlaying && isLeftActive ? 0.7 : isLeftActive ? 0.25 : 0.05}
               strokeLinecap="round"
             />
             <circle
               cx="-24"
               cy="0"
               r={Math.max(2.5, 3.5 * leftAmp)}
-              fill="#0f62fe"
-              opacity={isPlaying ? 0.95 : 0.4}
+              fill={isLeftActive ? "#0f62fe" : "#8d8d8d"}
+              opacity={isPlaying && isLeftActive ? 0.95 : isLeftActive ? 0.4 : 0.08}
             />
           </g>
 
@@ -156,25 +175,25 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             <path
               d="M 5 -28 A 32 32 0 0 1 5 28"
               fill="none"
-              stroke="#0f62fe"
+              stroke={isRightActive ? "#0f62fe" : "#8d8d8d"}
               strokeWidth={Math.max(1.2, 1.8 * rightAmp)}
-              opacity={isPlaying ? 0.95 : 0.4}
+              opacity={isPlaying && isRightActive ? 0.95 : isRightActive ? 0.4 : 0.08}
               strokeLinecap="round"
             />
             <path
               d="M 16 -40 A 48 48 0 0 1 16 40"
               fill="none"
-              stroke="#4589ff"
+              stroke={isRightActive ? "#4589ff" : "#8d8d8d"}
               strokeWidth={Math.max(0.8, 1.2 * rightAmp)}
-              opacity={isPlaying ? 0.7 : 0.25}
+              opacity={isPlaying && isRightActive ? 0.7 : isRightActive ? 0.25 : 0.05}
               strokeLinecap="round"
             />
             <circle
               cx="24"
               cy="0"
               r={Math.max(2.5, 3.5 * rightAmp)}
-              fill="#0f62fe"
-              opacity={isPlaying ? 0.95 : 0.4}
+              fill={isRightActive ? "#0f62fe" : "#8d8d8d"}
+              opacity={isPlaying && isRightActive ? 0.95 : isRightActive ? 0.4 : 0.08}
             />
           </g>
 
@@ -287,6 +306,48 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             {actionNotice}
           </div>
         )}
+      </div>
+
+      {/* L, center, R 채널 단독/양쪽 재생 전환 버튼 */}
+      <div className="w-full flex items-center justify-center my-1 z-10">
+        <div className="inline-flex p-0.5 rounded-lg bg-[#e8e8e8] dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] text-xs shadow-xs">
+          <button
+            type="button"
+            onClick={() => onSelectChannelMode?.('left')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-150 cursor-pointer ${
+              channelMode === 'left'
+                ? 'bg-[#0f62fe] text-white shadow-xs'
+                : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+            }`}
+            title="왼쪽(L) 채널만 단독 재생"
+          >
+            L
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectChannelMode?.('center')}
+            className={`px-3.5 py-1 rounded-md text-xs font-bold transition-all duration-150 cursor-pointer ${
+              channelMode === 'center'
+                ? 'bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] shadow-xs'
+                : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+            }`}
+            title="양쪽 채널 함께 재생 (기본값)"
+          >
+            center
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectChannelMode?.('right')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-150 cursor-pointer ${
+              channelMode === 'right'
+                ? 'bg-[#0f62fe] text-white shadow-xs'
+                : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+            }`}
+            title="오른쪽(R) 채널만 단독 재생"
+          >
+            R
+          </button>
+        </div>
       </div>
 
       {/* 하단 주파수 대역 표시 박스 (10~12px) */}
