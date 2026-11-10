@@ -31,6 +31,16 @@ export class AudioEngine {
   private abIsPaused: boolean = false;
   private abBypass: boolean = false;
 
+  // 핑크 노이즈 재생기 (전 대역 중심 음상 정위 확인용)
+  private pnBuffer: AudioBuffer | null = null;
+  private pnSource: AudioBufferSourceNode | null = null;
+  private pnEqGain: GainNode | null = null;
+  private pnBypassGain: GainNode | null = null;
+  private pnMainGain: GainNode | null = null;
+  private pnFilters: { left: BiquadFilterNode; right: BiquadFilterNode; freq: number }[] = [];
+  private pnIsPlaying: boolean = false;
+  private pnBypass: boolean = false;
+
   // 재생 위치 추적
   private abStartedAt: number = 0;
   private abPausedAt: number = 0;
@@ -85,6 +95,7 @@ export class AudioEngine {
     if (!this.ctx || !this.masterGain) return;
 
     this.stopTone();
+    this.stopPinkNoise();
 
     this.currentFrequency = freq;
     this.currentChannelMode = channelMode;
@@ -194,6 +205,229 @@ export class AudioEngine {
 
   public isToneActive(): boolean {
     return this.toneActive;
+  }
+
+  /**
+   * 전 가청 주파수가 고르게 감쇄(1/f)되는 표준 핑크 노이즈 버퍼 생성 (10초 무한 루프)
+   * 좌/우 채널에 동일한 코릴레이티드(상관) 모노 핑크 노이즈를 출력하여 음상 중심점을 정밀 검증
+   */
+  public createPinkNoiseBuffer(): AudioBuffer {
+    if (!this.ctx) throw new Error('AudioContext not ready');
+
+    const sampleRate = this.ctx.sampleRate;
+    const duration = 10.0;
+    const length = Math.floor(sampleRate * duration);
+    const buffer = this.ctx.createBuffer(2, length, sampleRate);
+
+    const leftData = buffer.getChannelData(0);
+    const rightData = buffer.getChannelData(1);
+
+    // Paul Kellet의 정밀 핑크 노이즈 필터 알고리즘 (옥타브당 -3dB 균등 에너지)
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+
+    // 초기 DC 오프셋 안정화를 위한 웜업
+    for (let i = 0; i < 2000; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      b6 = white * 0.115926;
+    }
+
+    for (let i = 0; i < length; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99886 * b0 + white * 0.0555179;
+      b1 = 0.99332 * b1 + white * 0.0750759;
+      b2 = 0.96900 * b2 + white * 0.1538520;
+      b3 = 0.86650 * b3 + white * 0.3104856;
+      b4 = 0.55000 * b4 + white * 0.5329522;
+      b5 = -0.7616 * b5 - white * 0.0168980;
+      const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.07;
+      b6 = white * 0.115926;
+
+      // 양쪽 귀에 동일 신호 입력 (중심 음상 정위 확인용 코릴레이티드 신호)
+      leftData[i] = pink;
+      rightData[i] = pink;
+    }
+
+    // 버퍼 끝부분 50ms 크로스페이드로 루프 시 팝/클릭 노이즈 완벽 제거
+    const fadeLen = Math.floor(sampleRate * 0.05);
+    for (let i = 0; i < fadeLen; i++) {
+      const w = i / fadeLen;
+      leftData[i] *= w;
+      rightData[i] *= w;
+      leftData[length - 1 - i] *= w;
+      rightData[length - 1 - i] *= w;
+    }
+
+    return buffer;
+  }
+
+  /**
+   * 핑크 노이즈 실시간 재생 시작 (현재 조정한 EQ 보정 필터 체인 통과)
+   */
+  public async startPinkNoise(
+    calibrations: { freq: number; leftDb: number; rightDb: number; q?: number }[],
+    bypass: boolean = false
+  ) {
+    const ctx = await this.ensureContext();
+    if (!this.masterGain) return;
+
+    this.stopTone();
+    this.stopPinkNoise();
+
+    if (!this.pnBuffer) {
+      this.pnBuffer = this.createPinkNoiseBuffer();
+    }
+
+    const now = ctx.currentTime;
+    this.pnSource = ctx.createBufferSource();
+    this.pnSource.buffer = this.pnBuffer;
+    this.pnSource.loop = true;
+
+    // 체감 음량 보정
+    const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
+    const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
+    const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
+
+    this.pnBypassGain = ctx.createGain();
+    this.pnBypassGain.gain.setValueAtTime(bypass ? 1.0 : 0.0, now);
+
+    this.pnEqGain = ctx.createGain();
+    this.pnEqGain.gain.setValueAtTime(!bypass ? gainMatchLinear : 0.0, now);
+
+    this.pnMainGain = ctx.createGain();
+    this.pnMainGain.gain.setValueAtTime(0.001, now);
+    this.pnMainGain.gain.exponentialRampToValueAtTime(1.0, now + 0.03);
+
+    // 캘리브레이션 필터 체인 구성
+    const splitter = ctx.createChannelSplitter(2);
+    const merger = ctx.createChannelMerger(2);
+
+    let prevLeft: AudioNode = splitter;
+    let prevRight: AudioNode = splitter;
+
+    const defaultQ = calibrations.length > 31 ? 8.65 : 4.31;
+    this.pnFilters = [];
+
+    calibrations.forEach((b, idx) => {
+      const qVal = b.q !== undefined ? b.q : defaultQ;
+
+      const leftFilt = ctx.createBiquadFilter();
+      leftFilt.type = 'peaking';
+      leftFilt.frequency.setValueAtTime(b.freq, now);
+      leftFilt.Q.setValueAtTime(qVal, now);
+      leftFilt.gain.setValueAtTime(b.leftDb, now);
+
+      const rightFilt = ctx.createBiquadFilter();
+      rightFilt.type = 'peaking';
+      rightFilt.frequency.setValueAtTime(b.freq, now);
+      rightFilt.Q.setValueAtTime(qVal, now);
+      rightFilt.gain.setValueAtTime(b.rightDb, now);
+
+      this.pnFilters.push({ left: leftFilt, right: rightFilt, freq: b.freq });
+
+      if (idx === 0) {
+        splitter.connect(leftFilt, 0);
+        splitter.connect(rightFilt, 1);
+      } else {
+        prevLeft.connect(leftFilt);
+        prevRight.connect(rightFilt);
+      }
+
+      prevLeft = leftFilt;
+      prevRight = rightFilt;
+    });
+
+    prevLeft.connect(merger, 0, 0);
+    prevRight.connect(merger, 0, 1);
+
+    // 1. 원본 바이패스 경로
+    this.pnSource.connect(this.pnBypassGain);
+    this.pnBypassGain.connect(this.pnMainGain);
+
+    // 2. EQ 보정 통과 경로
+    this.pnSource.connect(splitter);
+    merger.connect(this.pnEqGain);
+    this.pnEqGain.connect(this.pnMainGain);
+
+    this.pnMainGain.connect(this.masterGain);
+
+    this.pnSource.start(now);
+    this.pnIsPlaying = true;
+    this.pnBypass = bypass;
+  }
+
+  /**
+   * 핑크 노이즈 재생 중 슬라이더 변경 시 필터 게인 실시간 즉시 갱신
+   */
+  public updatePinkNoiseGains(calibrations: { freq: number; leftDb: number; rightDb: number }[]) {
+    if (!this.ctx || !this.pnIsPlaying) return;
+    const now = this.ctx.currentTime;
+
+    this.pnFilters.forEach((filt, idx) => {
+      const c = calibrations[idx];
+      if (c) {
+        filt.left.gain.setTargetAtTime(c.leftDb, now, 0.015);
+        filt.right.gain.setTargetAtTime(c.rightDb, now, 0.015);
+      }
+    });
+
+    if (this.pnEqGain && !this.pnBypass) {
+      const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
+      const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
+      const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
+      this.pnEqGain.gain.setTargetAtTime(gainMatchLinear, now, 0.02);
+    }
+  }
+
+  /**
+   * 핑크 노이즈 보정 적용(EQ) <-> 원본(Bypass) 실시간 무중단 전환
+   */
+  public togglePinkNoiseBypass(bypass: boolean, calibrations: { freq: number; leftDb: number; rightDb: number }[]) {
+    if (!this.ctx || !this.pnIsPlaying || !this.pnBypassGain || !this.pnEqGain) return;
+    const now = this.ctx.currentTime;
+    this.pnBypass = bypass;
+
+    const totalBoost = calibrations.reduce((sum, b) => sum + (b.leftDb + b.rightDb) / 2, 0);
+    const avgBoostDb = calibrations.length > 0 ? totalBoost / calibrations.length : 0;
+    const gainMatchLinear = Math.pow(10, (-avgBoostDb * 0.75) / 20);
+
+    if (bypass) {
+      this.pnEqGain.gain.setTargetAtTime(0.0001, now, 0.02);
+      this.pnBypassGain.gain.setTargetAtTime(1.0, now, 0.02);
+    } else {
+      this.pnBypassGain.gain.setTargetAtTime(0.0001, now, 0.02);
+      this.pnEqGain.gain.setTargetAtTime(gainMatchLinear, now, 0.02);
+    }
+  }
+
+  /**
+   * 핑크 노이즈 정지
+   */
+  public stopPinkNoise() {
+    if (!this.pnIsPlaying || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    try {
+      if (this.pnMainGain) {
+        this.pnMainGain.gain.setTargetAtTime(0.0001, now, 0.02);
+      }
+      if (this.pnSource) {
+        this.pnSource.stop(now + 0.03);
+      }
+    } catch {
+      // ignore
+    }
+    this.pnIsPlaying = false;
+    this.pnSource = null;
+    this.pnFilters = [];
+  }
+
+  public isPinkNoiseActive(): boolean {
+    return this.pnIsPlaying;
   }
 
   public createAmbientTestBuffer(): AudioBuffer {

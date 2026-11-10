@@ -18,6 +18,7 @@ import {
   ArrowRight,
   Info,
   Sparkles,
+  Volume2,
 } from 'lucide-react';
 import { BandState } from '../store/calibrationStore';
 
@@ -46,6 +47,8 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
 
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [isPinkNoisePlaying, setIsPinkNoisePlaying] = useState<boolean>(false);
+  const [pinkNoiseBypass, setPinkNoiseBypass] = useState<boolean>(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [channelMode, setChannelMode] = useState<'left' | 'center' | 'right'>('center');
 
@@ -120,7 +123,45 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
+  const getPinkNoiseBandPayload = (customCalibs = calibrations) => {
+    return activeBandIndices.map((bIdx) => {
+      const bInfo = FREQUENCY_BANDS_61[bIdx];
+      return {
+        freq: bInfo.freq,
+        leftDb: customCalibs[bIdx]?.leftDb || 0,
+        rightDb: customCalibs[bIdx]?.rightDb || 0,
+        q: eqMode === '61-band' ? 8.65 : 4.31,
+      };
+    });
+  };
+
+  const handleTogglePinkNoise = async () => {
+    if (isPinkNoisePlaying) {
+      audioEngine.stopPinkNoise();
+      setIsPinkNoisePlaying(false);
+    } else {
+      if (isPlaying) {
+        audioEngine.stopTone();
+        setIsPlaying(false);
+      }
+      const bands = getPinkNoiseBandPayload();
+      await audioEngine.startPinkNoise(bands, pinkNoiseBypass);
+      setIsPinkNoisePlaying(true);
+    }
+  };
+
+  const handleTogglePinkNoiseBypass = (bypass: boolean) => {
+    setPinkNoiseBypass(bypass);
+    const bands = getPinkNoiseBandPayload();
+    audioEngine.togglePinkNoiseBypass(bypass, bands);
+  };
+
   const handleToggleSound = async () => {
+    if (isPinkNoisePlaying) {
+      audioEngine.stopPinkNoise();
+      setIsPinkNoisePlaying(false);
+    }
+
     if (isPlaying) {
       audioEngine.stopTone();
       setIsPlaying(false);
@@ -169,6 +210,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         channelMode
       );
     }
+    if (isPinkNoisePlaying) {
+      audioEngine.updatePinkNoiseGains(getPinkNoiseBandPayload(updated));
+    }
   };
 
   const handleUpdateRight = (db: number) => {
@@ -189,6 +233,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
         channelMode
       );
     }
+    if (isPinkNoisePlaying) {
+      audioEngine.updatePinkNoiseGains(getPinkNoiseBandPayload(updated));
+    }
   };
 
   const handleResetCurrent = () => {
@@ -197,6 +244,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     setCalibrations(updated);
     if (isPlaying) {
       audioEngine.updateToneParams(0, 0, false, currentBandInfo.isoCompDb, channelMode);
+    }
+    if (isPinkNoisePlaying) {
+      audioEngine.updatePinkNoiseGains(getPinkNoiseBandPayload(updated));
     }
   };
 
@@ -223,6 +273,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   useEffect(() => {
     return () => {
       audioEngine.stopTone();
+      audioEngine.stopPinkNoise();
     };
   }, []);
 
@@ -438,6 +489,77 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                 ? `${currentBandInfo.isoCompDb.toFixed(1)} dB (음량 감쇄)`
                 : '0.0 dB (기준음)'}
             </div>
+          </div>
+
+          {/* [우측 카드 최하단] 전 대역 핑크 노이즈 중심 음상 확인 패널 */}
+          <div className="p-3 carbon-subcard rounded-lg space-y-2 border border-[#e0e0e0] dark:border-[#393939]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <Volume2 className="w-3.5 h-3.5 text-[#0f62fe] flex-shrink-0" />
+                <span className="font-bold text-xs text-[#161616] dark:text-[#f4f4f4]">
+                  전 대역 핑크 노이즈로 중심 음상 확인
+                </span>
+                <div className="relative group/pn inline-flex items-center">
+                  <Info className="w-3.5 h-3.5 text-[#0f62fe] cursor-help" />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/pn:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
+                    <strong>핑크 노이즈(Pink Noise) 중심 확인이란?</strong><br />
+                    전 가청 주파수가 고르게 울리는 표준 핑크 노이즈를 재생하여, 조정한 보정값이 적용되었을 때 소리가 머리 정중앙(두상 중심)에 올바르게 맺히는지 확인합니다.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* 보정 적용(EQ On) vs 원본(EQ 해제) 실시간 비교 스위치 */}
+              {isPinkNoisePlaying && (
+                <div className="inline-flex p-0.5 rounded bg-[#e0e0e0] dark:bg-[#262626] text-[10px] font-semibold border border-[#d0d0d0] dark:border-[#525252]">
+                  <button
+                    onClick={() => handleTogglePinkNoiseBypass(false)}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      !pinkNoiseBypass
+                        ? 'bg-[#0f62fe] text-white font-bold shadow-xs'
+                        : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+                    }`}
+                  >
+                    보정 적용
+                  </button>
+                  <button
+                    onClick={() => handleTogglePinkNoiseBypass(true)}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      pinkNoiseBypass
+                        ? 'bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] font-bold shadow-xs'
+                        : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+                    }`}
+                  >
+                    원본 (EQ 해제)
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-[#525252] dark:text-[#8d8d8d] leading-tight">
+              좌/우 조정한 보정값이 적용된 핑크 노이즈를 재생하여, 소리가 머리 정중앙에 편안하게 맺히는지 실시간으로 확인해보세요.
+            </p>
+
+            <button
+              onClick={handleTogglePinkNoise}
+              className={`w-full py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all duration-150 cursor-pointer ${
+                isPinkNoisePlaying
+                  ? 'bg-[#da1e28] hover:bg-[#ba1b23] text-white'
+                  : 'bg-[#0f62fe] hover:bg-[#0353e9] text-white'
+              }`}
+            >
+              {isPinkNoisePlaying ? (
+                <>
+                  <Square className="w-3.5 h-3.5 fill-current" />
+                  <span>핑크 노이즈 정지</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>핑크 노이즈 재생 (중심 확인)</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
