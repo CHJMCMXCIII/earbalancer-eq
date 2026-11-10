@@ -21,6 +21,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import { BandState } from '../store/calibrationStore';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface WizardCalibrationProps {
   eqMode: '31-band' | '61-band';
@@ -38,6 +39,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   setCalibrations,
   onGoToABTest,
 }) => {
+  const { t, lang } = useLanguage();
   // 31밴드 모드: 61개 중 31개 표준 짝수 대역만 활성화
   // 61밴드 모드: 1/6 옥타브 전체 61개 대역 활성화
   const activeBandIndices =
@@ -288,7 +290,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
           className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] disabled:opacity-30 disabled:pointer-events-none text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
-          <span>이전</span>
+          <span>{t.common.prev}</span>
         </button>
 
         {/* 주파수 대역 인터랙티브 내비게이션 바 (반응형으로 좌우 꽉 차고 클릭하기 편한 크기로 개편) */}
@@ -304,7 +306,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               <button
                 key={bIdx}
                 onClick={() => handleStepChange(idx)}
-                title={`${FREQUENCY_BANDS_61[bIdx].label} (${FREQUENCY_BANDS_61[bIdx].freq}Hz)${isDone ? ' [보정됨]' : ''}`}
+                title={`${FREQUENCY_BANDS_61[bIdx].label} (${FREQUENCY_BANDS_61[bIdx].freq}Hz)${isDone ? ` [${lang === 'ko' ? '보정됨' : 'Calibrated'}]` : ''}`}
                 className={`flex-1 h-5 sm:h-6 min-w-[3px] sm:min-w-[6px] rounded-xs sm:rounded-sm transition-all duration-150 cursor-pointer relative ${
                   isCurrent
                     ? 'bg-[#0f62fe] ring-2 ring-[#0f62fe]/50 scale-y-110 z-10 shadow-xs'
@@ -323,7 +325,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             onClick={() => handleStepChange(currentStepIndex + 1)}
             className="flex-shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded font-semibold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
           >
-            <span>다음</span>
+            <span>{t.common.next}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         ) : (
@@ -331,7 +333,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             onClick={onGoToABTest}
             className="flex-shrink-0 flex items-center gap-1 px-3.5 py-1.5 rounded font-bold bg-[#198038] hover:bg-[#0e6027] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
           >
-            <span>비교하기</span>
+            <span>{t.calibration.compareBtn}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
@@ -367,9 +369,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                     ? 'bg-white dark:bg-[#262626] text-[#0f62fe] dark:text-[#78a9ff] shadow-xs font-bold'
                     : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
                 }`}
-                title="1/3 옥타브 표준 31밴드 (Q=4.31)"
+                title={t.calibration.title31}
               >
-                31밴드 표준 (Q=4.31)
+                {t.calibration.band31}
               </button>
               <button
                 onClick={() => handleModeChange('61-band')}
@@ -378,9 +380,9 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                     ? 'bg-[#0f62fe] text-white shadow-xs font-bold'
                     : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
                 }`}
-                title="1/6 옥타브 초정밀 61밴드 (Q=8.65)"
+                title={t.calibration.title61}
               >
-                61밴드 초정밀 (Q=8.65)
+                {t.calibration.band61}
               </button>
             </div>
 
@@ -392,19 +394,19 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             <div className="flex items-start gap-2 text-[#0043ce] dark:text-[#78a9ff]">
               <span className="flex-shrink-0 text-xs mt-0.5">💡</span>
               <span className="leading-tight">
-                <strong>조절 팁:</strong> 잘 들리는 쪽을 낮추기보다, 보청기처럼 <strong>덜 들리는 쪽 귀의 볼륨을 올려서(+)</strong> 머리 중심으로 맞추면 소리가 답답해지지 않고 시원하게 들려요.
+                <strong>{t.calibration.tipLabel}</strong> {t.calibration.tipContent}
               </span>
             </div>
             <div className="flex items-start gap-2 text-[#da1e28] dark:text-[#fa4d56] font-medium pt-1.5 border-t border-[#d0e2ff]/60 dark:border-[#0043ce]/40">
               <span className="flex-shrink-0 text-xs mt-0.5">⚠️</span>
               <span className="leading-tight">
-                <strong>주의:</strong> 볼륨을 과도하게 키우면 이어폰·헤드폰의 드라이버가 고장나거나 청력이 손상될 수 있으니, 적정 음량에서 안전하게 조절해주세요.
+                <strong>{t.calibration.warningLabel}</strong> {t.calibration.warningContent}
               </span>
             </div>
             <div className="flex items-start gap-2 text-[#525252] dark:text-[#c6c6c6] pt-1.5 border-t border-[#d0e2ff]/60 dark:border-[#0043ce]/40">
               <span className="flex-shrink-0 text-xs mt-0.5">🎧</span>
               <span className="leading-tight">
-                <strong>착용 방식 및 이압 안내:</strong> 이어폰 삽입 깊이, 헤드폰 착용 각도·밀폐도 및 당일의 귀 압력(이압)에 따라 좌우 감도가 달라질 수 있습니다. 평소 감상 시 어색함이 느껴지면 언제든 재설정하세요.
+                <strong>{t.calibration.wearLabel}</strong> {t.calibration.wearContent}
               </span>
             </div>
           </div>
@@ -414,7 +416,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             <div className="flex justify-between items-center text-xs font-semibold">
               <span className="text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
-                <span>왼쪽 귀 (Channel: L) 소리 크기 보정</span>
+                <span>{t.calibration.leftVolLabel}</span>
               </span>
               <span className="font-mono text-[#0f62fe] dark:text-[#78a9ff] text-xs sm:text-sm font-bold">
                 {currentBandCalib.leftDb > 0 ? `+${currentBandCalib.leftDb.toFixed(1)}` : currentBandCalib.leftDb.toFixed(1)} dB
@@ -440,7 +442,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
             <div className="flex justify-between items-center text-xs font-semibold">
               <span className="text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
-                <span>오른쪽 귀 (Channel: R) 소리 크기 보정</span>
+                <span>{t.calibration.rightVolLabel}</span>
               </span>
               <span className="font-mono text-[#0f62fe] dark:text-[#78a9ff] text-xs sm:text-sm font-bold">
                 {currentBandCalib.rightDb > 0 ? `+${currentBandCalib.rightDb.toFixed(1)}` : currentBandCalib.rightDb.toFixed(1)} dB
@@ -467,27 +469,27 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               <Lock className="w-3.5 h-3.5 text-[#525252] dark:text-[#8d8d8d] flex-shrink-0" />
               <div>
                 <div className="font-semibold text-[#161616] dark:text-[#f4f4f4] text-xs flex items-center gap-1.5">
-                  <span>ISO 226 표준 전체 음량 자동 연동 (Default)</span>
+                  <span>{t.calibration.isoAutoTitle}</span>
                   <div className="relative group/tip inline-flex items-center">
                     <Info className="w-3.5 h-3.5 text-[#0f62fe] cursor-help" />
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
-                      <strong>ISO 226 등청감 곡선 표준이란?</strong><br />
-                      사람 귀는 낮은 저음과 높은 고음을 상대적으로 작게 듣습니다. 어떤 음높이를 선택해도 귀에 부담 없이 편안하고 똑같은 크기로 들리도록 시스템이 자동 보정해줍니다.
+                      <strong>{t.calibration.isoTooltipTitle}</strong><br />
+                      {t.calibration.isoTooltipBody}
                       <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
                     </div>
                   </div>
                 </div>
                 <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d] mt-0.5">
-                  인간 청각 특성에 맞춰 시스템이 자동 보정 ({eqMode === '61-band' ? '61밴드 초정밀 Q=8.65' : '31밴드 표준 Q=4.31'})
+                  {t.calibration.isoSubtext} ({eqMode === '61-band' ? (lang === 'ko' ? '61밴드 초정밀 Q=8.65' : '61-Band Precision Q=8.65') : (lang === 'ko' ? '31밴드 표준 Q=4.31' : '31-Band Standard Q=4.31')})
                 </div>
               </div>
             </div>
             <div className="bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] px-2 py-0.5 rounded font-mono text-[11px] font-bold text-[#161616] dark:text-[#f4f4f4] flex-shrink-0 shadow-xs">
               {currentBandInfo.isoCompDb > 0
-                ? `+${currentBandInfo.isoCompDb.toFixed(1)} dB (음량 보강)`
+                ? `+${currentBandInfo.isoCompDb.toFixed(1)} dB (${t.calibration.isoBoost})`
                 : currentBandInfo.isoCompDb < 0
-                ? `${currentBandInfo.isoCompDb.toFixed(1)} dB (음량 감쇄)`
-                : '0.0 dB (기준음)'}
+                ? `${currentBandInfo.isoCompDb.toFixed(1)} dB (${t.calibration.isoCut})`
+                : t.calibration.isoRef}
             </div>
           </div>
 
@@ -497,13 +499,13 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               <div className="flex items-center gap-1.5">
                 <Volume2 className="w-3.5 h-3.5 text-[#0f62fe] flex-shrink-0" />
                 <span className="font-bold text-xs text-[#161616] dark:text-[#f4f4f4]">
-                  전 대역 핑크 노이즈로 중심 음상 확인
+                  {t.calibration.pinkNoiseTitle}
                 </span>
                 <div className="relative group/pn inline-flex items-center">
                   <Info className="w-3.5 h-3.5 text-[#0f62fe] cursor-help" />
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/pn:block w-72 p-2.5 bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] text-[11px] rounded-lg shadow-2xl z-50 pointer-events-none leading-relaxed">
-                    <strong>핑크 노이즈(Pink Noise) 중심 확인이란?</strong><br />
-                    전 가청 주파수가 고르게 울리는 표준 핑크 노이즈를 재생하여, 조정한 보정값이 적용되었을 때 소리가 머리 정중앙(두상 중심)에 올바르게 맺히는지 확인합니다.
+                    <strong>{t.calibration.pinkNoiseTooltipTitle}</strong><br />
+                    {t.calibration.pinkNoiseTooltipBody}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#161616] dark:border-t-[#f4f4f4]" />
                   </div>
                 </div>
@@ -520,7 +522,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                         : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
                     }`}
                   >
-                    보정 적용
+                    {t.calibration.pinkNoiseApply}
                   </button>
                   <button
                     onClick={() => handleTogglePinkNoiseBypass(true)}
@@ -530,14 +532,14 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
                         : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
                     }`}
                   >
-                    원본 (EQ 해제)
+                    {t.calibration.pinkNoiseBypass}
                   </button>
                 </div>
               )}
             </div>
 
             <p className="text-[11px] text-[#525252] dark:text-[#8d8d8d] leading-tight">
-              좌/우 조정한 보정값이 적용된 핑크 노이즈를 재생하여, 소리가 머리 정중앙에 편안하게 맺히는지 실시간으로 확인해보세요.
+              {t.calibration.pinkNoiseDesc}
             </p>
 
             <button
@@ -551,12 +553,12 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
               {isPinkNoisePlaying ? (
                 <>
                   <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>핑크 노이즈 정지</span>
+                  <span>{t.calibration.pinkNoiseStop}</span>
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>핑크 노이즈 재생 (중심 확인)</span>
+                  <span>{t.calibration.pinkNoisePlay}</span>
                 </>
               )}
             </button>

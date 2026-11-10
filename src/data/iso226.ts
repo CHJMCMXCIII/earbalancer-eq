@@ -1,4 +1,5 @@
 // ISO 226:2003 Equal Loudness Contour (등청감 곡선) 데이터 및 보간 유틸리티
+import { FREQ_DESCRIPTIONS_EN, Language } from '../i18n/translations';
 
 export interface FrequencyBand {
   id: number;
@@ -291,4 +292,11 @@ export function interpolate10to31Bands(
   }
 
   return result;
+}
+
+export function getLocalizedBandDescription(band: FrequencyBand, lang: Language): string {
+  if (lang === 'en') {
+    return FREQ_DESCRIPTIONS_EN[band.id] || band.description;
+  }
+  return band.description;
 }

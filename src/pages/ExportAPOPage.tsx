@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { generateAPOConfigText, downloadAPOConfigFile } from '../tauri/tauriBridge';
 import { FREQUENCY_BANDS_61 } from '../data/iso226';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   Profile,
   loadSavedProfiles,
@@ -38,7 +39,8 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   onBackToABTest,
   onGoToCalibration,
 }) => {
-  const [profileName, setProfileName] = useState<string>('내 헤드폰');
+  const { t, lang } = useLanguage();
+  const [profileName, setProfileName] = useState<string>(() => (lang === 'ko' ? '내 헤드폰' : 'My Headphones'));
 
   // 소리 맞춤 단계에서 가장 크게 증가한 주파수의 gain 값 (+1 만큼 -dB 반영)
   const maxBoost = Math.max(
@@ -174,7 +176,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
 
     setProfiles(updatedProfiles);
     saveProfilesToStorage(updatedProfiles);
-    alert(`[${profileName}] 설정이 브라우저에 안전하게 저장되었습니다.`);
+    alert(lang === 'ko' ? `[${profileName}] 설정이 브라우저에 안전하게 저장되었습니다.` : `[${profileName}] profile saved to browser storage.`);
   };
 
   // 프리셋 재생성 (현재 프로필 자동 저장 후 소리 맞춤 페이지로 이동)
@@ -212,7 +214,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   };
 
   const handleDeleteProfile = (id: string, name: string) => {
-    if (!confirm(`'${name}' 설정을 삭제하시겠습니까?`)) return;
+    if (!confirm(lang === 'ko' ? `'${name}' 설정을 삭제하시겠습니까?` : `Are you sure you want to delete '${name}'?`)) return;
     const filtered = profiles.filter((p) => p.id !== id);
     setProfiles(filtered);
     saveProfilesToStorage(filtered);
@@ -227,20 +229,20 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>이전 (A/B 테스트로)</span>
+          <span>{t.export.backToAB}</span>
         </button>
 
         <span className="text-xs text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
-          모든 캘리브레이션이 완료되었습니다. Equalizer APO에 저장하세요!
+          {t.export.desc}
         </span>
 
         <button
           onClick={handleRegeneratePreset}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded font-semibold bg-[#edf5ff] hover:bg-[#d0e2ff] dark:bg-[#002d9c]/40 dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
-          title="현재 조정된 프로필을 자동 저장하고 소리 맞춤 화면으로 이동합니다"
+          title={lang === 'ko' ? '현재 조정된 프로필을 자동 저장하고 소리 맞춤 화면으로 이동합니다' : 'Auto-save profile and return to calibration'}
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>프리셋 재생성</span>
+          <span>{t.export.recalibrateBtn}</span>
         </button>
       </div>
 
@@ -250,10 +252,10 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           <FileText className="w-4 h-4 text-[#0f62fe] flex-shrink-0" />
           <div>
             <div className="font-bold text-[#161616] dark:text-[#f4f4f4] text-xs sm:text-sm">
-              Equalizer APO 연동 및 설치 지원
+              {t.export.installBannerTitle}
             </div>
             <div className="text-[11px] text-[#525252] dark:text-[#c6c6c6] mt-0.5">
-              설정 파일을 윈도우에 적용하는 방법을 확인하거나, 아직 프로그램이 없다면 무료로 내려받으세요.
+              {t.export.installBannerDesc}
             </div>
           </div>
         </div>
@@ -265,7 +267,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
           >
             <BookOpen className="w-3.5 h-3.5 text-[#0f62fe]" />
-            <span>설정 가이드 보기</span>
+            <span>{t.export.guideModalTitle}</span>
           </button>
 
           <button
@@ -273,7 +275,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[#edf5ff] dark:bg-[#002d9c]/40 hover:bg-[#d0e2ff] dark:hover:bg-[#002d9c]/60 text-[#0f62fe] dark:text-[#78a9ff] rounded font-semibold border border-[#d0e2ff] dark:border-[#0043ce] transition-colors duration-150 shadow-xs cursor-pointer text-xs"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Equalizer APO 설치 안내</span>
+            <span>{t.export.installBannerTitle}</span>
           </button>
         </div>
       </div>
@@ -293,18 +295,19 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           <div className="grid grid-cols-2 gap-3.5 pb-3 border-b border-[#e0e0e0] dark:border-[#393939]">
             <div>
               <label className="block text-[11px] font-semibold text-[#525252] dark:text-[#c6c6c6] mb-1">
-                기기 프로필명
+                {t.export.deviceProfileLabel}
               </label>
               <div className="flex gap-1.5">
                 <input
                   type="text"
                   value={profileName}
+                  placeholder={t.export.deviceProfilePlaceholder}
                   onChange={(e) => setProfileName(e.target.value)}
                   className="w-full carbon-subcard rounded px-2.5 py-1 text-xs text-[#161616] dark:text-[#f4f4f4] font-medium focus:outline-none focus:border-[#0f62fe]"
                 />
                 <button
                   onClick={handleCopyInputProfileName}
-                  title={copiedInputName ? '프로필명 복사 완료!' : '현재 프로필명 복사'}
+                  title={copiedInputName ? t.common.copied : t.export.copyNameTooltip}
                   className={`px-2 py-1 rounded text-xs font-semibold border transition-colors duration-150 flex items-center cursor-pointer shadow-xs ${
                     copiedInputName
                       ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
@@ -315,7 +318,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 </button>
                 <button
                   onClick={handleSaveToProfileList}
-                  title="현재 보정값을 이 이름으로 저장"
+                  title={t.export.saveProfileBtn}
                   className="px-2.5 py-1 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center cursor-pointer shadow-xs"
                 >
                   <Save className="w-3.5 h-3.5 text-[#0f62fe]" />
@@ -326,13 +329,13 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             <div>
               <div className="flex justify-between items-center text-[11px] font-semibold text-[#525252] dark:text-[#c6c6c6] mb-1">
                 <div className="flex items-center gap-1.5">
-                  <span>클리핑 방지 Preamp</span>
+                  <span>{t.export.preampLabel}</span>
                   <button
                     onClick={() => setPreampDb(suggestedPreamp)}
                     title={`최대 증폭(+${maxBoost.toFixed(1)}dB) + 1dB 자동 계산값(${suggestedPreamp.toFixed(1)}dB)으로 재설정`}
                     className="px-1.5 py-0.2 rounded text-[10px] bg-[#edf5ff] dark:bg-[#002d9c]/40 text-[#0f62fe] dark:text-[#78a9ff] hover:underline font-semibold cursor-pointer border border-[#d0e2ff] dark:border-[#0043ce]"
                   >
-                    자동({suggestedPreamp.toFixed(1)}dB)
+                    {t.export.suggestedBadge}({suggestedPreamp.toFixed(1)}dB)
                   </button>
                 </div>
                 <span className="font-mono text-[#161616] dark:text-[#f4f4f4] font-bold text-xs">{preampDb.toFixed(1)} dB</span>
@@ -348,7 +351,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               />
               <div className="flex justify-between text-[10px] text-[#8d8d8d] font-mono mt-0.5">
                 <span>-16.0 dB</span>
-                <span>최대 증폭 +{maxBoost.toFixed(1)}dB 반영</span>
+                <span>{lang === 'ko' ? `최대 증폭 +${maxBoost.toFixed(1)}dB 반영` : `Max boost +${maxBoost.toFixed(1)}dB compensated`}</span>
                 <span>0.0 dB</span>
               </div>
             </div>
@@ -360,10 +363,10 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               <div className="space-y-0.5">
                 <div className="text-xs sm:text-sm font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5">
                   <Download className="w-4 h-4 text-[#0f62fe]" />
-                  <span>Equalizer APO 설정 파일 (.txt) 다운로드</span>
+                  <span>{t.export.downloadBtn}</span>
                 </div>
                 <div className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-                  내 귀에 맞춘 31밴드 캘리브레이션 값을 담은 공식 GraphicEQ 파일을 내려받습니다.
+                  {lang === 'ko' ? '내 귀에 맞춘 31/61밴드 캘리브레이션 값을 담은 공식 GraphicEQ 파일을 내려받습니다.' : 'Download official GraphicEQ file containing your personalized EQ calibration.'}
                 </div>
               </div>
 
@@ -372,7 +375,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded font-bold text-xs bg-[#0f62fe] hover:bg-[#0353e9] text-white shadow-xs transition-all duration-150 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>설정 파일 다운로드</span>
+                <span>{t.export.downloadBtn}</span>
               </button>
             </div>
           </div>
@@ -380,12 +383,12 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           {/* 내 저장 프로필 (좌측 카드 다운로드 버튼 아래로 이동) */}
           <div className="pt-2.5 border-t border-[#e0e0e0] dark:border-[#393939] space-y-2">
             <div className="flex items-center justify-between text-xs font-semibold text-[#161616] dark:text-[#f4f4f4]">
-              <span>내 저장 프로필 ({profiles.length})</span>
+              <span>{t.export.savedProfilesTitle} ({profiles.length})</span>
             </div>
             <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
               {profiles.length === 0 ? (
                 <div className="text-[11px] text-[#8d8d8d] py-1 text-center">
-                  저장된 프로필이 없습니다. 위에서 기기명을 입력하고 저장 버튼을 눌러보세요.
+                  {t.export.noSavedProfiles}
                 </div>
               ) : (
                 profiles.map((p) => (
@@ -408,7 +411,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                             ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
                             : 'text-[#8d8d8d] hover:text-[#0f62fe] dark:hover:text-[#78a9ff]'
                         }`}
-                        title={copiedProfileId === p.id ? '제목 복사 완료!' : `'${p.name}' 제목 복사`}
+                        title={copiedProfileId === p.id ? t.common.copied : `'${p.name}' ${t.common.copy}`}
                       >
                         {copiedProfileId === p.id ? (
                           <Check className="w-3.5 h-3.5" />
@@ -419,7 +422,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                       <button
                         onClick={() => handleDeleteProfile(p.id, p.name)}
                         className="text-[#8d8d8d] hover:text-[#da1e28] p-1 rounded transition-colors duration-150 cursor-pointer"
-                        title="프로필 삭제"
+                        title={t.export.deleteProfileBtn}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -434,8 +437,8 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
         {/* 우측 5컬럼: GraphicEQ 실시간 미리보기 및 하단 클립보드 복사 버튼 배치 */}
         <div className="md:col-span-5 h-full p-4 carbon-card rounded-xl shadow-xs flex flex-col justify-between gap-3 w-full">
           <div className="text-[#161616] dark:text-[#f4f4f4] pb-2 border-b border-[#e0e0e0] dark:border-[#393939] font-bold text-xs flex items-center justify-between">
-            <span>Equalizer APO GraphicEQ 문법 미리보기</span>
-            <span className="text-[10px] text-[#8d8d8d] font-normal">Channel: L / R 분리</span>
+            <span>{t.export.previewTitle}</span>
+            <span className="text-[10px] text-[#8d8d8d] font-normal">Channel: L / R</span>
           </div>
 
           <pre className="flex-1 min-h-[180px] max-h-[260px] overflow-y-auto whitespace-pre-wrap leading-tight p-2.5 carbon-subcard rounded-lg text-[#161616] dark:text-[#f4f4f4] font-mono text-[11px]">
@@ -445,14 +448,14 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
           {/* 문법 미리보기 텍스트박스 하단에 배치된 전체 문법 클립보드 복사 버튼 */}
           <div className="pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex items-center justify-between text-xs">
             <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">
-              전체 텍스트 복사 후 config에 붙여넣기
+              {lang === 'ko' ? '전체 텍스트 복사 후 config에 붙여넣기' : 'Copy and paste into config.txt'}
             </span>
             <button
               onClick={handleCopyClipboard}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded font-semibold text-xs bg-[#0f62fe] hover:bg-[#0353e9] text-white shadow-xs transition-all duration-150 cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? '복사 완료!' : '전체 문법 클립보드 복사'}</span>
+              <span>{copied ? t.common.copied : t.export.copySyntaxBtn}</span>
             </button>
           </div>
         </div>
@@ -472,7 +475,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             <div className="flex items-center justify-between pb-2.5 border-b border-[#e0e0e0] dark:border-[#393939]">
               <div className="flex items-center gap-2 font-bold text-sm sm:text-base text-[#161616] dark:text-[#f4f4f4]">
                 <BookOpen className="w-4 h-4 text-[#0f62fe]" />
-                <span>Equalizer APO 설정 파일 반영 가이드</span>
+                <span>{t.export.guideModalTitle}</span>
               </div>
               <button
                 onClick={() => setShowGuideModal(false)}
@@ -489,33 +492,32 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 <div className="p-2.5 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1 shadow-xs">
                   <div className="flex items-center gap-1.5 font-bold text-[#161616] dark:text-[#f4f4f4]">
                     <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
-                    <span>1단계: 보정 파일 저장 및 config 폴더로 이동</span>
+                    <span>{t.export.guideStep1Title}</span>
                   </div>
                   <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                    화면의 <strong>[설정 파일 다운로드]</strong> 버튼을 눌러 .txt 파일을 내려받은 뒤, <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\config\</code> 폴더로 이동합니다.
+                    {t.export.guideStep1Desc}
                   </p>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1 shadow-xs">
                   <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
-                    <span>★ 2단계: Configuration Editor 실행 및 Instant mode 켜기 (핵심)</span>
+                    <span>{t.export.guideStep2Title}</span>
                   </div>
                   <p className="text-[11px] text-amber-900 dark:text-amber-200 leading-tight">
-                    시작 메뉴에서 <strong>Configuration Editor</strong>를 실행한 뒤, <strong>창 상단 툴바의 [Instant mode] 체크박스에 체크(V)</strong>가 되어 있는지 반드시 확인하세요!
+                    {t.export.guideStep2Desc}
                   </p>
                   <p className="text-[10px] text-amber-800 dark:text-amber-300">
-                    💡 Instant mode가 꺼져 있으면 파일을 불러오거나 저장해도 소리가 실시간으로 바뀌지 않습니다.
+                    💡 {lang === 'ko' ? 'Instant mode가 켜져 있는지 확인하세요 (파일 저장 시 실시간 적용).' : 'Ensure [Instant mode] is checked in Configuration Editor for real-time changes.'}
                   </p>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1 shadow-xs">
                   <div className="flex items-center gap-1.5 font-bold text-[#161616] dark:text-[#f4f4f4]">
                     <CheckCircle2 className="w-4 h-4 text-[#0f62fe]" />
-                    <span>3단계: 보정 파일 불러오기 (Include)</span>
+                    <span>{t.export.guideStep3Title}</span>
                   </div>
                   <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                    초록색 <strong>+</strong> 버튼 ➡️ <strong>Control</strong> ➡️ <strong>Include (Include configuration file)</strong>를 누르고, 1단계에서 넣은 보정 파일을 선택하면 소리에 즉시 적용됩니다.<br />
-                    <span className="text-[10px] text-[#8d8d8d]">(또는 기본 config.txt의 내용을 지우고 내려받은 파일 내용을 그대로 붙여넣은 뒤 Ctrl+S 저장하셔도 됩니다.)</span>
+                    {t.export.guideStep3Desc}
                   </p>
                 </div>
               </div>
@@ -523,11 +525,11 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               {/* 해결 및 점검 체크리스트 (중복 제거) */}
               <div className="p-3 bg-[#f4f4f4] dark:bg-[#262626] rounded-lg border border-[#e0e0e0] dark:border-[#393939] text-xs space-y-1.5 shadow-xs">
                 <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1">
-                  <span>💡 소리가 바뀌지 않거나 먹통일 때 점검 사항</span>
+                  <span>💡 {lang === 'ko' ? '소리가 바뀌지 않거나 먹통일 때 점검 사항' : 'Troubleshooting Checklist'}</span>
                 </div>
                 <ul className="text-[11px] text-[#525252] dark:text-[#c6c6c6] list-disc list-inside space-y-1">
-                  <li><strong>장치 활성화 확인:</strong> 시작 메뉴에서 <strong>Configurator</strong> 실행 ➡️ `Playback devices`에서 현재 사용 중인 이어폰/헤드폰 장치에 체크(V)가 되어 있는지 확인 (최초 설치 시 윈도우 재부팅 필요)</li>
-                  <li><strong>필터 전원 확인:</strong> 각 블록 좌측의 둥근 전원 아이콘(⭕)이 켜져 있는지 확인</li>
+                  <li><strong>{lang === 'ko' ? '장치 활성화 확인:' : 'Check Playback Device:'}</strong> {lang === 'ko' ? 'Configurator 실행 ➡️ Playback devices에서 이어폰/헤드폰 장치에 체크 확인 (재부팅 필요)' : 'Open Configurator ➡️ verify your headphone playback device is checked (reboot required)'}</li>
+                  <li><strong>{lang === 'ko' ? '필터 전원 확인:' : 'Check Power Icon:'}</strong> {lang === 'ko' ? '각 EQ 블록 좌측의 둥근 전원 아이콘(⭕)이 켜져 있는지 확인' : 'Verify the round power icon (⭕) on the EQ block is active'}</li>
                 </ul>
               </div>
             </div>
@@ -538,7 +540,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 onClick={() => setShowGuideModal(false)}
                 className="px-4 py-2 bg-[#0f62fe] hover:bg-[#0353e9] text-white rounded text-xs sm:text-sm font-semibold transition-colors duration-150 cursor-pointer"
               >
-                확인 완료
+                {t.common.confirm}
               </button>
             </div>
           </div>
@@ -559,7 +561,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
             <div className="flex items-center justify-between pb-2.5 border-b border-[#e0e0e0] dark:border-[#393939]">
               <div className="flex items-center gap-2 font-bold text-sm sm:text-base text-[#161616] dark:text-[#f4f4f4]">
                 <Download className="w-4 h-4 text-[#0f62fe]" />
-                <span>Equalizer APO 앱 설치 및 초기 설정 가이드</span>
+                <span>{t.export.installModalTitle}</span>
               </div>
               <button
                 onClick={() => setShowInstallModal(false)}
@@ -576,7 +578,7 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
                     <span className="w-5 h-5 rounded-full bg-[#0f62fe] text-white flex items-center justify-center text-[11px] font-bold">1</span>
-                    <span>프로그램 다운로드</span>
+                    <span>{t.export.installModalStep1Title}</span>
                   </div>
                   <a
                     href="https://sourceforge.net/projects/equalizerapo/"
@@ -584,12 +586,12 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#0f62fe] hover:bg-[#0353e9] text-white rounded text-[11px] font-semibold shadow-xs transition-colors cursor-pointer"
                   >
-                    <span>공식 다운로드 (SourceForge)</span>
+                    <span>SourceForge</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
                 <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                  공식 Equalizer APO SourceForge 페이지에서 최신 설치 파일(.exe)을 다운로드합니다.
+                  {t.export.installModalStep1Desc}
                 </p>
               </div>
 
@@ -597,10 +599,10 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               <div className="p-3 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1 shadow-xs">
                 <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
                   <span className="w-5 h-5 rounded-full bg-[#0f62fe] text-white flex items-center justify-center text-[11px] font-bold">2</span>
-                  <span>설치 진행</span>
+                  <span>{t.export.installModalStep2Title}</span>
                 </div>
                 <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                  다운로드한 실행 파일을 열고 안내에 따라 설치를 진행합니다 (기본 경로 <code className="bg-[#e0e0e0] dark:bg-[#393939] px-1 py-0.5 rounded font-mono text-[#0f62fe] dark:text-[#78a9ff]">C:\Program Files\EqualizerAPO\</code> 설치 권장).
+                  {t.export.installModalStep2Desc}
                 </p>
               </div>
 
@@ -608,11 +610,10 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               <div className="p-3 rounded-lg bg-white dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] space-y-1.5 shadow-xs">
                 <div className="font-bold text-[#161616] dark:text-[#f4f4f4] flex items-center gap-1.5 text-xs sm:text-sm">
                   <span className="w-5 h-5 rounded-full bg-[#0f62fe] text-white flex items-center justify-center text-[11px] font-bold">3</span>
-                  <span>장치(Device) 선택 및 활성화</span>
+                  <span>{t.export.installModalStep3Title}</span>
                 </div>
                 <p className="text-[11px] text-[#525252] dark:text-[#c6c6c6]">
-                  설치 도중 또는 완료 직후 자동으로 <strong>Configurator</strong> 창이 열립니다.<br />
-                  이퀄라이저를 적용할 본인의 스피커나 헤드셋(출력 장치) 혹은 마이크(입력 장치)를 <strong>체크(V)</strong>하고 확인을 누릅니다.
+                  {t.export.installModalStep3Desc}
                 </p>
               </div>
 
@@ -620,10 +621,10 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
               <div className="p-3 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1.5 shadow-xs">
                 <div className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5 text-xs sm:text-sm">
                   <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[11px] font-bold">4</span>
-                  <span>★ PC 재부팅 (필수)</span>
+                  <span>{t.export.installModalStep4Title}</span>
                 </div>
                 <p className="text-[11px] text-amber-900 dark:text-amber-200">
-                  설치 완료 후 <strong>컴퓨터를 반드시 재부팅</strong>해야 드라이버가 적용되어 정상 작동합니다.
+                  {t.export.installModalStep4Desc}
                 </p>
               </div>
             </div>
@@ -636,14 +637,14 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 rel="noopener noreferrer"
                 className="text-xs text-[#0f62fe] dark:text-[#78a9ff] hover:underline flex items-center gap-1 font-semibold"
               >
-                <span>SourceForge 다운로드 링크</span>
+                <span>{t.export.openSourceForge}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
               <button
                 onClick={() => setShowInstallModal(false)}
                 className="px-4 py-2 bg-[#0f62fe] hover:bg-[#0353e9] text-white rounded text-xs sm:text-sm font-semibold transition-colors duration-150 cursor-pointer"
               >
-                닫기
+                {t.common.close}
               </button>
             </div>
           </div>

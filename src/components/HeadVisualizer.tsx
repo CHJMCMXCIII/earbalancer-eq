@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FrequencyBand } from '../data/iso226';
+import { FrequencyBand, getLocalizedBandDescription } from '../data/iso226';
 import { CheckCircle2, Radio, Play, Square, RotateCcw, Compass } from 'lucide-react';
 import { audioEngine } from '../audio/AudioEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface HeadVisualizerProps {
   leftDb: number;
@@ -28,6 +29,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   channelMode = 'center',
   onSelectChannelMode,
 }) => {
+  const { t, lang } = useLanguage();
   const [spatialAngle, setSpatialAngle] = useState<number>(0);
 
   // 360도 바이노럴 회전 재생 시 실시간 각도 추적 애니메이션
@@ -90,15 +92,19 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
   const getSoundLocationText = () => {
     if (channelMode === '360') {
-      let dir = '정면';
-      if (spatialAngle >= 45 && spatialAngle < 135) dir = '우측';
-      else if (spatialAngle >= 135 && spatialAngle < 225) dir = '후면';
-      else if (spatialAngle >= 225 && spatialAngle < 315) dir = '좌측';
-      return `360° 회전 (${dir} ${Math.round(spatialAngle)}°)`;
+      let dir: string = t.visualizer.rotFront;
+      if (spatialAngle >= 45 && spatialAngle < 135) dir = t.visualizer.rotRight;
+      else if (spatialAngle >= 135 && spatialAngle < 225) dir = t.visualizer.rotBack;
+      else if (spatialAngle >= 225 && spatialAngle < 315) dir = t.visualizer.rotLeft;
+      return `${t.visualizer.rot360} (${dir} ${Math.round(spatialAngle)}°)`;
     }
-    if (channelMode === 'left') return '왼쪽 귀 (L 단독)';
-    if (channelMode === 'right') return '오른쪽 귀 (R 단독)';
-    return isBalanced ? '두상 정중앙 (Center)' : soundCenterShift < 0 ? '중앙 좌측 편향' : '중앙 우측 편향';
+    if (channelMode === 'left') return t.visualizer.leftEar;
+    if (channelMode === 'right') return t.visualizer.rightEar;
+    return isBalanced
+      ? t.visualizer.headCenter
+      : soundCenterShift < 0
+      ? t.visualizer.centerBiasedLeft
+      : t.visualizer.centerBiasedRight;
   };
 
   return (
@@ -108,22 +114,22 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         <div className="flex items-center gap-1.5 font-medium">
           <Radio className="w-4 h-4 text-[#0f62fe]" />
           <span className="font-semibold text-xs sm:text-sm text-[#161616] dark:text-[#f4f4f4]">
-            소리 위치 가이드
+            {t.visualizer.title}
           </span>
         </div>
 
         <div>
           {isBalanced ? (
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-[#161616] px-2.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 text-[11px]">
-              <CheckCircle2 className="w-3.5 h-3.5" /> 양쪽 귀 균형 일치
+              <CheckCircle2 className="w-3.5 h-3.5" /> {t.visualizer.balanced}
             </span>
           ) : diffDb < 0 ? (
             <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939] text-[11px]">
-              왼쪽이 <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{Math.abs(diffDb).toFixed(1)} dB</strong> 더 큼
+              {t.visualizer.leftLouder} <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{Math.abs(diffDb).toFixed(1)} dB</strong> {t.visualizer.louderSuffix}
             </span>
           ) : (
             <span className="text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939] text-[11px]">
-              오른쪽이 <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{diffDb.toFixed(1)} dB</strong> 더 큼
+              {t.visualizer.rightLouder} <strong className="text-[#0f62fe] dark:text-[#78a9ff]">+{diffDb.toFixed(1)} dB</strong> {t.visualizer.louderSuffix}
             </span>
           )}
         </div>
@@ -134,7 +140,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         {/* 상단 소리 위치 실시간 인디케이터 배너 (머리 모양 앞부분 중앙 상단으로 이동) */}
         <div className="absolute top-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/95 dark:bg-[#161616]/95 border border-[#e0e0e0] dark:border-[#393939] text-[10px] font-semibold text-[#161616] dark:text-[#f4f4f4] shadow-xs backdrop-blur-xs z-20 whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#0f62fe] animate-pulse inline-block" />
-          <span className="text-[#525252] dark:text-[#8d8d8d]">소리 위치:</span>
+          <span className="text-[#525252] dark:text-[#8d8d8d]">{t.visualizer.soundPos}</span>
           <span className="text-[#0f62fe] dark:text-[#78a9ff] font-bold">{getSoundLocationText()}</span>
         </div>
 
@@ -441,7 +447,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
                 ? 'bg-[#0f62fe] text-white shadow-xs'
                 : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
             }`}
-            title="왼쪽(L) 채널만 단독 재생"
+            title={t.visualizer.titleL}
           >
             L
           </button>
@@ -453,7 +459,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
                 ? 'bg-[#161616] dark:bg-[#f4f4f4] text-white dark:text-[#161616] shadow-xs'
                 : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
             }`}
-            title="양쪽 채널 함께 재생 (기본값)"
+            title={t.visualizer.titleCenter}
           >
             center
           </button>
@@ -465,7 +471,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
                 ? 'bg-[#0f62fe] text-white shadow-xs'
                 : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
             }`}
-            title="오른쪽(R) 채널만 단독 재생"
+            title={t.visualizer.titleR}
           >
             R
           </button>
@@ -477,7 +483,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
                 ? 'bg-[#0f62fe] text-white shadow-xs'
                 : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
             }`}
-            title="바이노럴 360° 서라운드 회전 재생"
+            title={t.visualizer.title360}
           >
             <Compass className="w-3.5 h-3.5" />
             <span>360°</span>
@@ -488,7 +494,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
       {/* 하단 주파수 대역 표시 박스 (10~12px) */}
       <div className="w-full mt-2 pt-2 border-t border-[#e0e0e0] dark:border-[#393939] flex flex-col items-center justify-between text-xs z-10">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">현재 대역:</span>
+          <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d]">{t.visualizer.currentBand}</span>
           <span className="font-mono font-bold text-xs text-[#161616] dark:text-[#f4f4f4] bg-[#f4f4f4] dark:bg-[#161616] px-2 py-0.5 rounded border border-[#e0e0e0] dark:border-[#393939]">
             {currentBand.label}
           </span>
@@ -498,7 +504,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         </div>
 
         <div className="mt-1 text-[11px] text-[#525252] dark:text-[#c6c6c6] text-center">
-          {currentBand.description}
+          {getLocalizedBandDescription(currentBand, lang)}
         </div>
       </div>
 
@@ -516,12 +522,12 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             {isPlaying ? (
               <>
                 <Square className="w-4 h-4 fill-current" />
-                <span>소리 멈추기</span>
+                <span>{t.visualizer.stopTone}</span>
               </>
             ) : (
               <>
                 <Play className="w-4 h-4 fill-current" />
-                <span>소리 듣고 맞추기</span>
+                <span>{t.visualizer.playTone}</span>
               </>
             )}
           </button>
@@ -532,7 +538,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
               className="flex items-center justify-center gap-1.5 py-1 text-xs text-[#525252] dark:text-[#8d8d8d] hover:text-[#161616] dark:hover:text-[#ffffff] transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>현재 음높이 리셋</span>
+              <span>{t.visualizer.resetPitch}</span>
             </button>
           )}
         </div>

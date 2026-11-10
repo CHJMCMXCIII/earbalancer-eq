@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { audioEngine } from '../audio/AudioEngine';
 import { FREQUENCY_BANDS_61 } from '../data/iso226';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   Play,
   Pause,
@@ -30,6 +31,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
   onBackToCalibration,
   onGoToExport,
 }) => {
+  const { t, lang } = useLanguage();
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isBypass, setIsBypass] = useState<boolean>(false);
@@ -215,18 +217,18 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
           className="flex items-center gap-1 px-3 py-1.5 rounded font-semibold bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] transition-colors duration-150 cursor-pointer text-xs"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>다시 세부 조절하기</span>
+          <span>{t.abtest.backToCalibrate}</span>
         </button>
 
         <span className="text-[11px] text-[#525252] dark:text-[#8d8d8d] font-medium hidden sm:inline">
-          🎧 양쪽 귀 감도 보정 전/후 소리를 실시간으로 비교해보세요
+          🎧 {t.abtest.desc}
         </span>
 
         <button
           onClick={onGoToExport}
           className="flex items-center gap-1.5 px-4 py-1.5 rounded font-bold bg-[#0f62fe] hover:bg-[#0353e9] text-white transition-all duration-150 shadow-xs cursor-pointer text-xs"
         >
-          <span>Equalizer APO에 저장하기</span>
+          <span>{t.abtest.goToExport}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -240,13 +242,13 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             <div className="flex items-center gap-1.5 carbon-subcard px-2.5 py-1 rounded text-[#161616] dark:text-[#f4f4f4] font-medium max-w-[220px] sm:max-w-xs shadow-xs">
               <Music className="w-3.5 h-3.5 text-[#0f62fe] flex-shrink-0" />
               <span className="truncate text-xs font-semibold">
-                {customFileName ? customFileName : '기본 내장 앰비언트 코드'}
+                {customFileName ? customFileName : (lang === 'ko' ? '기본 내장 앰비언트 코드' : 'Default Ambient Synth')}
               </span>
             </div>
 
             <label className="cursor-pointer px-2.5 py-1 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-medium border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center gap-1 shadow-xs">
               <Upload className="w-3.5 h-3.5 text-[#0f62fe]" />
-              <span>내 음악 열기</span>
+              <span>{t.abtest.uploadCustom}</span>
               <input
                 type="file"
                 accept="audio/*"
@@ -274,17 +276,17 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
               {isPlaying ? (
                 <>
                   <Pause className="w-3.5 h-3.5 fill-current" />
-                  <span>일시정지</span>
+                  <span>{t.abtest.pause}</span>
                 </>
               ) : isPaused ? (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>이어서 재생</span>
+                  <span>{t.abtest.play}</span>
                 </>
               ) : (
                 <>
                   <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>음악 재생</span>
+                  <span>{t.abtest.play}</span>
                 </>
               )}
             </button>
@@ -293,7 +295,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             {(isPlaying || isPaused) && (
               <button
                 onClick={handleStop}
-                title="처음으로 되돌리기"
+                title={lang === 'ko' ? '처음으로 되돌리기' : 'Rewind to start'}
                 className="p-1.5 rounded bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 cursor-pointer"
               >
                 <Square className="w-3.5 h-3.5 fill-current" />
@@ -337,9 +339,9 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       <div className="p-2.5 carbon-subcard rounded-xl border border-amber-300 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 flex items-start gap-2 text-xs shadow-xs">
         <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
         <div className="text-[11px] leading-relaxed text-[#161616] dark:text-[#f4f4f4]">
-          <strong className="text-amber-800 dark:text-amber-200">💡 이전에 이미 Equalizer APO를 설정해 사용 중이셨나요?</strong>
+          <strong className="text-amber-800 dark:text-amber-200">💡 {t.abtest.existingApoBannerTitle}</strong>
           <p className="text-[#525252] dark:text-[#c6c6c6] mt-0.5">
-            윈도우에서 Equalizer APO가 이미 켜져 있다면 소리가 이중으로 보정되어 왜곡될 수 있습니다. <strong>Configuration Editor</strong>에서 기존 EQ 블록의 전원 아이콘(⭕)을 잠시 끈 뒤 소리를 비교해보세요.
+            {t.abtest.existingApoBannerDesc}
           </p>
         </div>
       </div>
@@ -357,8 +359,8 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
             }`}
           >
             <span className="text-[10px] tracking-wider uppercase opacity-75 font-semibold">Option A</span>
-            <span className="text-sm sm:text-base font-bold mt-0.5">보정 전 (원본 소리)</span>
-            <span className="text-[11px] opacity-75 mt-0.5">양쪽 귀 불균형 상태 그대로</span>
+            <span className="text-sm sm:text-base font-bold mt-0.5">{lang === 'ko' ? '보정 전 (원본 소리)' : 'Original (EQ Off)'}</span>
+            <span className="text-[11px] opacity-75 mt-0.5">{lang === 'ko' ? '양쪽 귀 불균형 상태 그대로' : 'Raw ear sensitivity imbalance'}</span>
           </button>
 
           {/* Option B: 보정 후 (라이트/다크 모드 고대비 가독성 최적화) */}
@@ -375,14 +377,14 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
                 !isBypass ? 'text-white/90' : 'text-[#0f62fe] dark:text-[#78a9ff]'
               }`}
             >
-              Option B (추천)
+              Option B ({lang === 'ko' ? '추천' : 'Recommended'})
             </span>
             <span
               className={`text-sm sm:text-base font-bold mt-0.5 flex items-center gap-1.5 ${
                 !isBypass ? 'text-white' : 'text-[#161616] dark:text-[#f4f4f4]'
               }`}
             >
-              <span>내 귀 맞춤 소리</span>
+              <span>{lang === 'ko' ? '내 귀 맞춤 소리' : 'Calibrated Sound'}</span>
               <CheckCircle
                 className={`w-3.5 h-3.5 ${
                   !isBypass ? 'text-emerald-300' : 'text-[#198038] dark:text-[#42be65]'
@@ -394,7 +396,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
                 !isBypass ? 'text-blue-100' : 'text-[#525252] dark:text-[#c6c6c6]'
               }`}
             >
-              좌/우 귀 감도 차이 보정 적용됨
+              {lang === 'ko' ? '좌/우 귀 감도 차이 보정 적용됨' : 'Left/Right ear balance applied'}
             </span>
           </button>
         </div>
@@ -404,12 +406,12 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
       <div className="p-3 carbon-card rounded-xl shadow-xs space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <span className="font-semibold text-xs text-[#161616] dark:text-[#f4f4f4]">
-            내 청각 캘리브레이션 주파수 곡선
+            {t.abtest.graphTitle}
           </span>
 
           {/* 클릭 가능한 범례(Legend) 버튼 그룹 */}
           <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] mr-1 hidden sm:inline">채널 선택:</span>
+            <span className="text-[10px] text-[#525252] dark:text-[#8d8d8d] mr-1 hidden sm:inline">{lang === 'ko' ? '채널 선택:' : 'Channel:'}</span>
             
             {/* 전체 보기 */}
             <button
@@ -420,7 +422,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
                   : 'bg-[#e8e8e8] dark:bg-[#393939] text-[#525252] dark:text-[#c6c6c6] border-transparent hover:border-[#8d8d8d]'
               }`}
             >
-              전체 보기
+              {t.abtest.legendBoth}
             </button>
 
             {/* 왼쪽 귀 L 버튼 */}
@@ -433,7 +435,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-[#0f62fe] inline-block" />
-              <span>L (왼쪽 귀)</span>
+              <span>{t.abtest.legendLeft}</span>
             </button>
 
             {/* 오른쪽 귀 R 버튼 */}
@@ -446,7 +448,7 @@ export const ABTestPage: React.FC<ABTestPageProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />
-              <span>R (오른쪽 귀)</span>
+              <span>{t.abtest.legendRight}</span>
             </button>
           </div>
         </div>
