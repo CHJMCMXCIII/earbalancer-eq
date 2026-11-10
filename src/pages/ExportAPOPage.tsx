@@ -51,6 +51,8 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   const [preampDb, setPreampDb] = useState<number>(() => suggestedPreamp);
   const [profiles, setProfiles] = useState<Profile[]>(() => loadSavedProfiles());
   const [copied, setCopied] = useState<boolean>(false);
+  const [copiedProfileId, setCopiedProfileId] = useState<string | null>(null);
+  const [copiedInputName, setCopiedInputName] = useState<boolean>(false);
   const [autoApplied, setAutoApplied] = useState<boolean>(false);
   const [showGuideModal, setShowGuideModal] = useState<boolean>(false);
   const [showInstallModal, setShowInstallModal] = useState<boolean>(false);
@@ -59,6 +61,27 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
   React.useEffect(() => {
     setPreampDb(suggestedPreamp);
   }, [suggestedPreamp]);
+
+  const handleCopyProfileName = async (name: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(name);
+      setCopiedProfileId(id);
+      setTimeout(() => setCopiedProfileId(null), 2000);
+    } catch (e) {
+      console.error('Failed to copy profile name:', e);
+    }
+  };
+
+  const handleCopyInputProfileName = async () => {
+    if (!profileName) return;
+    try {
+      await navigator.clipboard.writeText(profileName);
+      setCopiedInputName(true);
+      setTimeout(() => setCopiedInputName(false), 2000);
+    } catch (e) {
+      console.error('Failed to copy profile name:', e);
+    }
+  };
 
   const activeBands =
     eqMode === '61-band'
@@ -280,6 +303,17 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                   className="w-full carbon-subcard rounded px-2.5 py-1 text-xs text-[#161616] dark:text-[#f4f4f4] font-medium focus:outline-none focus:border-[#0f62fe]"
                 />
                 <button
+                  onClick={handleCopyInputProfileName}
+                  title={copiedInputName ? '프로필명 복사 완료!' : '현재 프로필명 복사'}
+                  className={`px-2 py-1 rounded text-xs font-semibold border transition-colors duration-150 flex items-center cursor-pointer shadow-xs ${
+                    copiedInputName
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                      : 'bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] border-[#e0e0e0] dark:border-[#525252]'
+                  }`}
+                >
+                  {copiedInputName ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5 text-[#525252] dark:text-[#c6c6c6]" />}
+                </button>
+                <button
                   onClick={handleSaveToProfileList}
                   title="현재 보정값을 이 이름으로 저장"
                   className="px-2.5 py-1 bg-[#e8e8e8] hover:bg-[#d0d0d0] dark:bg-[#393939] dark:hover:bg-[#525252] text-[#161616] dark:text-[#f4f4f4] rounded text-xs font-semibold border border-[#e0e0e0] dark:border-[#525252] transition-colors duration-150 flex items-center cursor-pointer shadow-xs"
@@ -357,20 +391,39 @@ export const ExportAPOPage: React.FC<ExportAPOPageProps> = ({
                 profiles.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-1.5 carbon-subcard rounded text-xs"
+                    className="flex items-center justify-between p-1.5 carbon-subcard rounded text-xs gap-1.5"
                   >
                     <span
                       onClick={() => handleLoadProfile(p)}
+                      title={`'${p.name}' 설정 불러오기`}
                       className="cursor-pointer text-[#161616] dark:text-[#f4f4f4] hover:text-[#0f62fe] truncate flex-1 font-medium text-xs"
                     >
                       {p.name}
                     </span>
-                    <button
-                      onClick={() => handleDeleteProfile(p.id, p.name)}
-                      className="text-[#8d8d8d] hover:text-[#da1e28] p-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
+                      <button
+                        onClick={() => handleCopyProfileName(p.name, p.id)}
+                        className={`p-1 rounded transition-colors duration-150 cursor-pointer ${
+                          copiedProfileId === p.id
+                            ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40'
+                            : 'text-[#8d8d8d] hover:text-[#0f62fe] dark:hover:text-[#78a9ff]'
+                        }`}
+                        title={copiedProfileId === p.id ? '제목 복사 완료!' : `'${p.name}' 제목 복사`}
+                      >
+                        {copiedProfileId === p.id ? (
+                          <Check className="w-3.5 h-3.5" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProfile(p.id, p.name)}
+                        className="text-[#8d8d8d] hover:text-[#da1e28] p-1 rounded transition-colors duration-150 cursor-pointer"
+                        title="프로필 삭제"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
