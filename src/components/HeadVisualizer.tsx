@@ -67,23 +67,25 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   const isLeftActive = channelMode === 'left' || channelMode === 'center' || channelMode === '360';
   const isRightActive = channelMode === 'right' || channelMode === 'center' || channelMode === '360';
 
-  // 360도 궤도 반경 및 현재 소리 위치 좌표 산출
-  const orbitRx = 88;
-  const orbitRy = 80;
+  // 360도 궤도 반경 및 현재 소리 위치 좌표 산출 (머리와 음파를 가리지 않도록 넉넉하게 확장된 궤도)
+  const centerX = 170;
+  const centerY = 135;
+  const orbitRx = 120;
+  const orbitRy = 90;
 
-  let soundX = 160 + soundCenterShift;
-  let soundY = 105;
+  let soundX = centerX + soundCenterShift;
+  let soundY = centerY;
 
   if (channelMode === '360') {
     const rad = (spatialAngle * Math.PI) / 180;
-    soundX = 160 + orbitRx * Math.sin(rad);
-    soundY = 105 - orbitRy * Math.cos(rad);
+    soundX = centerX + orbitRx * Math.sin(rad);
+    soundY = centerY - orbitRy * Math.cos(rad);
   } else if (channelMode === 'left') {
-    soundX = 160 - orbitRx;
-    soundY = 105;
+    soundX = centerX - orbitRx;
+    soundY = centerY;
   } else if (channelMode === 'right') {
-    soundX = 160 + orbitRx;
-    soundY = 105;
+    soundX = centerX + orbitRx;
+    soundY = centerY;
   }
 
   const getSoundLocationText = () => {
@@ -128,33 +130,33 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
       </div>
 
       {/* 미니멀한 얇은 선 두상 및 방사형 음파 일러스트레이션 (상하 길이 연장된 두상 그래픽) */}
-      <div className="relative w-full max-w-[320px] h-48 sm:h-52 flex items-center justify-center z-10 my-auto">
-        {/* 상단 소리 위치 실시간 인디케이터 배너 */}
-        <div className="absolute top-1 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/90 dark:bg-[#161616]/90 border border-[#e0e0e0] dark:border-[#393939] text-[10px] font-semibold text-[#161616] dark:text-[#f4f4f4] shadow-xs backdrop-blur-xs z-20">
+      <div className="relative w-full max-w-[340px] sm:max-w-[360px] h-56 sm:h-60 flex items-center justify-center z-10 my-auto">
+        {/* 상단 소리 위치 실시간 인디케이터 배너 (머리 모양 앞부분 중앙 상단으로 이동) */}
+        <div className="absolute top-1 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/95 dark:bg-[#161616]/95 border border-[#e0e0e0] dark:border-[#393939] text-[10px] font-semibold text-[#161616] dark:text-[#f4f4f4] shadow-xs backdrop-blur-xs z-20 whitespace-nowrap">
           <span className="w-1.5 h-1.5 rounded-full bg-[#0f62fe] animate-pulse inline-block" />
           <span className="text-[#525252] dark:text-[#8d8d8d]">소리 위치:</span>
           <span className="text-[#0f62fe] dark:text-[#78a9ff] font-bold">{getSoundLocationText()}</span>
         </div>
 
-        <svg viewBox="0 0 320 210" className="w-full h-full">
+        <svg viewBox="0 0 340 240" className="w-full h-full">
           {/* 중앙 수직 점선 기준선 */}
           <line
-            x1="160"
-            y1="8"
-            x2="160"
-            y2="202"
+            x1="170"
+            y1="45"
+            x2="170"
+            y2="225"
             stroke="currentColor"
             className="text-[#e0e0e0] dark:text-[#393939]"
             strokeDasharray="2 3"
             strokeWidth="1"
           />
 
-          {/* 360도 바이노럴 서라운드 궤도 가이드 트랙 */}
+          {/* 360도 바이노럴 서라운드 궤도 가이드 트랙 (머리 모양 및 기존 그래픽을 전혀 가리지 않는 확장 궤도) */}
           <ellipse
-            cx="160"
-            cy="105"
-            rx="88"
-            ry="80"
+            cx="170"
+            cy="135"
+            rx="120"
+            ry="90"
             fill="none"
             stroke="currentColor"
             className={
@@ -169,16 +171,16 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
           {/* 360도 방위 표시 마커 (0°, 90°, 180°, 270°) */}
           <g className="text-[9px] fill-[#8d8d8d] dark:fill-[#525252] font-semibold select-none" textAnchor="middle">
-            <text x="160" y="16">0°</text>
-            <text x="264" y="108">90°</text>
-            <text x="160" y="200">180°</text>
-            <text x="56" y="108">270°</text>
+            <text x="170" y="38">0°</text>
+            <text x="304" y="138">90°</text>
+            <text x="170" y="237">180°</text>
+            <text x="36" y="138">270°</text>
           </g>
 
           {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 (IBM Carbon Blue & Gray, 소리 위치 이동 반영) */}
           {isPlaying && (
             <g
-              transform={`translate(${160 + soundCenterShift}, 105)`}
+              transform={`translate(${170 + soundCenterShift}, 135)`}
               style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
             >
               <circle
@@ -216,7 +218,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
           {/* 2. 좌측 귀 개인화 독립 음파 (L) - 이동 거리 2.0px/dB로 확대 */}
           <g
-            transform={`translate(${108 - leftWaveMove}, 105)`}
+            transform={`translate(${118 - leftWaveMove}, 135)`}
             style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
           >
             <path
@@ -246,7 +248,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
           {/* 3. 우측 귀 개인화 독립 음파 (R) - 이동 거리 2.0px/dB로 확대 */}
           <g
-            transform={`translate(${212 + rightWaveMove}, 105)`}
+            transform={`translate(${222 + rightWaveMove}, 135)`}
             style={{ transition: 'transform 0.15s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
           >
             <path
@@ -275,7 +277,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
           </g>
 
           {/* 4. 미니멀한 두상 */}
-          <g transform="translate(160, 105)">
+          <g transform="translate(170, 135)">
             {/* 정면 방향을 가리키는 간접 화살표 그래픽 */}
             <g transform="translate(0, -68)">
               <path
@@ -379,8 +381,8 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
           {/* 360도 바이노럴 서라운드 회전 레이더 빔 */}
           {channelMode === '360' && isPlaying && (
             <line
-              x1="160"
-              y1="105"
+              x1="170"
+              y1="135"
               x2={soundX}
               y2={soundY}
               stroke="currentColor"
