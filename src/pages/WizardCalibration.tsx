@@ -50,7 +50,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
   const [isPinkNoisePlaying, setIsPinkNoisePlaying] = useState<boolean>(false);
   const [pinkNoiseBypass, setPinkNoiseBypass] = useState<boolean>(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
-  const [channelMode, setChannelMode] = useState<'left' | 'center' | 'right'>('center');
+  const [channelMode, setChannelMode] = useState<'left' | 'center' | 'right' | '360'>('center');
 
   const currentBandId = activeBandIndices[currentStepIndex] ?? 0;
   const rawBandInfo = FREQUENCY_BANDS_61[currentBandId] || FREQUENCY_BANDS_61[0];
@@ -178,7 +178,7 @@ export const WizardCalibration: React.FC<WizardCalibrationProps> = ({
     }
   };
 
-  const handleSelectChannelMode = (mode: 'left' | 'center' | 'right') => {
+  const handleSelectChannelMode = (mode: 'left' | 'center' | 'right' | '360') => {
     setChannelMode(mode);
     if (isPlaying) {
       audioEngine.updateToneParams(

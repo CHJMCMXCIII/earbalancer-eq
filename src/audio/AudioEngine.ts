@@ -17,10 +17,17 @@ export class AudioEngine {
   private osc: OscillatorNode | null = null;
   private oscLeftGain: GainNode | null = null;
   private oscRightGain: GainNode | null = null;
+  private oscLeftDelay: DelayNode | null = null;
+  private oscRightDelay: DelayNode | null = null;
   private oscMerger: ChannelMergerNode | null = null;
   private toneActive: boolean = false;
   private currentFrequency: number = 1000;
-  private currentChannelMode: 'left' | 'center' | 'right' = 'center';
+  private currentChannelMode: 'left' | 'center' | 'right' | '360' = 'center';
+  private spatial360Timer: number | null = null;
+  private spatial360StartTime: number = 0;
+  private spatial360Period: number = 6.0;
+  private currentBaseLeftLinear: number = 0.15;
+  private currentBaseRightLinear: number = 0.15;
 
   // A/B 테스트용 오디오 재생기 (재생/일시정지/탐색 지원)
   private abSourceNode: AudioBufferSourceNode | null = null;
@@ -89,7 +96,7 @@ export class AudioEngine {
     rightDb: number = 0,
     phaseInvert: boolean = false,
     isoOffsetDb: number = 0,
-    channelMode: 'left' | 'center' | 'right' = 'center'
+    channelMode: 'left' | 'center' | 'right' | '360' = 'center'
   ) {
     await this.ensureContext();
     if (!this.ctx || !this.masterGain) return;
@@ -126,22 +133,45 @@ export class AudioEngine {
       leftLinear = 0.0001;
     }
 
+    this.currentBaseLeftLinear = Math.max(0.0001, leftLinear);
+    this.currentBaseRightLinear = Math.max(0.0001, rightLinear);
+
     this.oscLeftGain = this.ctx.createGain();
     this.oscRightGain = this.ctx.createGain();
+    this.oscLeftDelay = this.ctx.createDelay(0.01);
+    this.oscRightDelay = this.ctx.createDelay(0.01);
+    this.oscLeftDelay.delayTime.setValueAtTime(0, now);
+    this.oscRightDelay.delayTime.setValueAtTime(0, now);
 
     this.oscLeftGain.gain.setValueAtTime(0.0001, now);
-    this.oscLeftGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(leftLinear)), now + 0.025);
-
     this.oscRightGain.gain.setValueAtTime(0.0001, now);
-    this.oscRightGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(rightLinear)), now + 0.025);
+
+    if (this.currentChannelMode === '360') {
+      const { gainL, gainR, delayL, delayR } = this.calculate360Pan(
+        0,
+        this.currentBaseLeftLinear,
+        this.currentBaseRightLinear
+      );
+      this.oscLeftGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, gainL), now + 0.025);
+      this.oscRightGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, gainR), now + 0.025);
+      this.oscLeftDelay.delayTime.setValueAtTime(delayL, now);
+      this.oscRightDelay.delayTime.setValueAtTime(delayR, now);
+      this.start360RotationLoop();
+    } else {
+      this.oscLeftGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(leftLinear)), now + 0.025);
+      this.oscRightGain.gain.exponentialRampToValueAtTime(Math.max(0.0001, Math.abs(rightLinear)), now + 0.025);
+    }
 
     this.oscMerger = this.ctx.createChannelMerger(2);
 
     this.osc.connect(this.oscLeftGain);
     this.osc.connect(this.oscRightGain);
 
-    this.oscLeftGain.connect(this.oscMerger, 0, 0);
-    this.oscRightGain.connect(this.oscMerger, 0, 1);
+    this.oscLeftGain.connect(this.oscLeftDelay);
+    this.oscRightGain.connect(this.oscRightDelay);
+
+    this.oscLeftDelay.connect(this.oscMerger, 0, 0);
+    this.oscRightDelay.connect(this.oscMerger, 0, 1);
 
     this.oscMerger.connect(this.masterGain);
 
@@ -154,7 +184,7 @@ export class AudioEngine {
     rightDb: number,
     phaseInvert: boolean,
     isoOffsetDb: number = 0,
-    channelMode?: 'left' | 'center' | 'right'
+    channelMode?: 'left' | 'center' | 'right' | '360'
   ) {
     if (!this.ctx || !this.toneActive || !this.oscLeftGain || !this.oscRightGain) return;
 
@@ -181,18 +211,115 @@ export class AudioEngine {
       leftLinear = 0.0001;
     }
 
-    this.oscLeftGain.gain.setTargetAtTime(leftLinear, now, 0.015);
-    this.oscRightGain.gain.setTargetAtTime(rightLinear, now, 0.015);
+    this.currentBaseLeftLinear = Math.max(0.0001, leftLinear);
+    this.currentBaseRightLinear = Math.max(0.0001, rightLinear);
+
+    if (this.currentChannelMode === '360') {
+      if (this.spatial360Timer === null) {
+        this.start360RotationLoop();
+      }
+    } else {
+      this.stop360RotationLoop();
+      if (this.oscLeftDelay && this.oscRightDelay) {
+        this.oscLeftDelay.delayTime.setTargetAtTime(0, now, 0.015);
+        this.oscRightDelay.delayTime.setTargetAtTime(0, now, 0.015);
+      }
+      this.oscLeftGain.gain.setTargetAtTime(leftLinear, now, 0.015);
+      this.oscRightGain.gain.setTargetAtTime(rightLinear, now, 0.015);
+    }
+  }
+
+  /**
+   * 360도 바이노럴 서라운드 회전 팬 계산 (ILD 레벨 차이 + ITD 0.55ms 시간차 + 후면 핀나 감쇄)
+   */
+  private calculate360Pan(angleDeg: number, baseL: number, baseR: number) {
+    const rad = (angleDeg * Math.PI) / 180;
+    const x = Math.sin(rad); // -1 (좌측) ~ +1 (우측)
+    const y = Math.cos(rad); // +1 (정면) ~ -1 (후면)
+
+    // 등파워 패닝 법칙 (Constant-power panning)
+    const phi = ((x + 1) * Math.PI) / 4;
+    const panL = Math.max(0.12, Math.cos(phi) * 1.414);
+    const panR = Math.max(0.12, Math.sin(phi) * 1.414);
+
+    // 머리 뒤쪽(후면) 음향 음영 감쇄 (Rear head shadow)
+    const rearFactor = y < 0 ? 1.0 - 0.22 * Math.abs(y) : 1.0;
+
+    // 양이 시간차 (ITD): 성인 평균 두부 직경 기준 최대 0.55ms
+    let delayL = 0;
+    let delayR = 0;
+    if (x > 0) {
+      delayL = x * 0.00055;
+    } else if (x < 0) {
+      delayR = Math.abs(x) * 0.00055;
+    }
+
+    return {
+      gainL: baseL * panL * rearFactor,
+      gainR: baseR * panR * rearFactor,
+      delayL,
+      delayR,
+    };
+  }
+
+  private start360RotationLoop() {
+    this.stop360RotationLoop();
+    this.spatial360StartTime = this.ctx ? this.ctx.currentTime : 0;
+
+    const tick = () => {
+      if (!this.ctx || !this.toneActive || this.currentChannelMode !== '360') {
+        this.stop360RotationLoop();
+        return;
+      }
+      const now = this.ctx.currentTime;
+      const elapsed = now - this.spatial360StartTime;
+      const angleDeg = ((elapsed / this.spatial360Period) * 360) % 360;
+
+      const { gainL, gainR, delayL, delayR } = this.calculate360Pan(
+        angleDeg,
+        this.currentBaseLeftLinear,
+        this.currentBaseRightLinear
+      );
+
+      if (this.oscLeftGain && this.oscRightGain && this.oscLeftDelay && this.oscRightDelay) {
+        this.oscLeftGain.gain.setTargetAtTime(Math.max(0.0001, gainL), now, 0.02);
+        this.oscRightGain.gain.setTargetAtTime(Math.max(0.0001, gainR), now, 0.02);
+        this.oscLeftDelay.delayTime.setTargetAtTime(delayL, now, 0.02);
+        this.oscRightDelay.delayTime.setTargetAtTime(delayR, now, 0.02);
+      }
+    };
+
+    this.spatial360Timer = window.setInterval(tick, 25);
+  }
+
+  private stop360RotationLoop() {
+    if (this.spatial360Timer !== null) {
+      clearInterval(this.spatial360Timer);
+      this.spatial360Timer = null;
+    }
+  }
+
+  public get360Angle(): number {
+    if (!this.ctx || !this.toneActive || this.currentChannelMode !== '360') {
+      return 0;
+    }
+    const elapsed = this.ctx.currentTime - this.spatial360StartTime;
+    return ((elapsed / this.spatial360Period) * 360) % 360;
   }
 
   public stopTone() {
     if (!this.toneActive || !this.osc || !this.ctx) return;
 
+    this.stop360RotationLoop();
     const now = this.ctx.currentTime;
     try {
       if (this.oscLeftGain && this.oscRightGain) {
         this.oscLeftGain.gain.setTargetAtTime(0.0001, now, 0.015);
         this.oscRightGain.gain.setTargetAtTime(0.0001, now, 0.015);
+      }
+      if (this.oscLeftDelay && this.oscRightDelay) {
+        this.oscLeftDelay.delayTime.setValueAtTime(0, now);
+        this.oscRightDelay.delayTime.setValueAtTime(0, now);
       }
       this.osc.stop(now + 0.03);
     } catch {
@@ -201,6 +328,8 @@ export class AudioEngine {
 
     this.toneActive = false;
     this.osc = null;
+    this.oscLeftDelay = null;
+    this.oscRightDelay = null;
   }
 
   public isToneActive(): boolean {

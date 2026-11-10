@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FrequencyBand } from '../data/iso226';
-import { CheckCircle2, Radio, Play, Square, RotateCcw } from 'lucide-react';
+import { CheckCircle2, Radio, Play, Square, RotateCcw, Compass } from 'lucide-react';
+import { audioEngine } from '../audio/AudioEngine';
 
 interface HeadVisualizerProps {
   leftDb: number;
@@ -11,8 +12,8 @@ interface HeadVisualizerProps {
   onToggleSound?: () => void;
   onResetCurrent?: () => void;
   actionNotice?: string | null;
-  channelMode?: 'left' | 'center' | 'right';
-  onSelectChannelMode?: (mode: 'left' | 'center' | 'right') => void;
+  channelMode?: 'left' | 'center' | 'right' | '360';
+  onSelectChannelMode?: (mode: 'left' | 'center' | 'right' | '360') => void;
 }
 
 export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
@@ -27,6 +28,25 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
   channelMode = 'center',
   onSelectChannelMode,
 }) => {
+  const [spatialAngle, setSpatialAngle] = useState<number>(0);
+
+  // 360도 바이노럴 회전 재생 시 실시간 각도 추적 애니메이션
+  useEffect(() => {
+    let animId: number;
+    if (isPlaying && channelMode === '360') {
+      const loop = () => {
+        setSpatialAngle(audioEngine.get360Angle());
+        animId = requestAnimationFrame(loop);
+      };
+      animId = requestAnimationFrame(loop);
+    } else {
+      setSpatialAngle(0);
+    }
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [isPlaying, channelMode]);
+
   const leftAmp = Math.max(0.3, Math.min(2.0, 1.0 + leftDb / 12));
   const rightAmp = Math.max(0.3, Math.min(2.0, 1.0 + rightDb / 12));
 
@@ -44,8 +64,40 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
     ? 32
     : Math.max(-32, Math.min(32, diffDb * 2.8));
 
-  const isLeftActive = channelMode === 'left' || channelMode === 'center';
-  const isRightActive = channelMode === 'right' || channelMode === 'center';
+  const isLeftActive = channelMode === 'left' || channelMode === 'center' || channelMode === '360';
+  const isRightActive = channelMode === 'right' || channelMode === 'center' || channelMode === '360';
+
+  // 360도 궤도 반경 및 현재 소리 위치 좌표 산출
+  const orbitRx = 88;
+  const orbitRy = 80;
+
+  let soundX = 160 + soundCenterShift;
+  let soundY = 105;
+
+  if (channelMode === '360') {
+    const rad = (spatialAngle * Math.PI) / 180;
+    soundX = 160 + orbitRx * Math.sin(rad);
+    soundY = 105 - orbitRy * Math.cos(rad);
+  } else if (channelMode === 'left') {
+    soundX = 160 - orbitRx;
+    soundY = 105;
+  } else if (channelMode === 'right') {
+    soundX = 160 + orbitRx;
+    soundY = 105;
+  }
+
+  const getSoundLocationText = () => {
+    if (channelMode === '360') {
+      let dir = '정면';
+      if (spatialAngle >= 45 && spatialAngle < 135) dir = '우측';
+      else if (spatialAngle >= 135 && spatialAngle < 225) dir = '후면';
+      else if (spatialAngle >= 225 && spatialAngle < 315) dir = '좌측';
+      return `360° 회전 (${dir} ${Math.round(spatialAngle)}°)`;
+    }
+    if (channelMode === 'left') return '왼쪽 귀 (L 단독)';
+    if (channelMode === 'right') return '오른쪽 귀 (R 단독)';
+    return isBalanced ? '두상 정중앙 (Center)' : soundCenterShift < 0 ? '중앙 좌측 편향' : '중앙 우측 편향';
+  };
 
   return (
     <div className="relative flex flex-col items-center justify-between p-4 carbon-card rounded-xl shadow-xs overflow-hidden h-full">
@@ -77,6 +129,13 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
       {/* 미니멀한 얇은 선 두상 및 방사형 음파 일러스트레이션 (상하 길이 연장된 두상 그래픽) */}
       <div className="relative w-full max-w-[320px] h-48 sm:h-52 flex items-center justify-center z-10 my-auto">
+        {/* 상단 소리 위치 실시간 인디케이터 배너 */}
+        <div className="absolute top-1 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/90 dark:bg-[#161616]/90 border border-[#e0e0e0] dark:border-[#393939] text-[10px] font-semibold text-[#161616] dark:text-[#f4f4f4] shadow-xs backdrop-blur-xs z-20">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#0f62fe] animate-pulse inline-block" />
+          <span className="text-[#525252] dark:text-[#8d8d8d]">소리 위치:</span>
+          <span className="text-[#0f62fe] dark:text-[#78a9ff] font-bold">{getSoundLocationText()}</span>
+        </div>
+
         <svg viewBox="0 0 320 210" className="w-full h-full">
           {/* 중앙 수직 점선 기준선 */}
           <line
@@ -89,6 +148,32 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             strokeDasharray="2 3"
             strokeWidth="1"
           />
+
+          {/* 360도 바이노럴 서라운드 궤도 가이드 트랙 */}
+          <ellipse
+            cx="160"
+            cy="105"
+            rx="88"
+            ry="80"
+            fill="none"
+            stroke="currentColor"
+            className={
+              channelMode === '360'
+                ? "text-[#0f62fe] dark:text-[#78a9ff]"
+                : "text-[#d0d0d0] dark:text-[#393939]"
+            }
+            strokeDasharray={channelMode === '360' ? "none" : "3 3"}
+            strokeWidth={channelMode === '360' ? "1.4" : "0.8"}
+            opacity={channelMode === '360' ? (isPlaying ? 0.85 : 0.5) : 0.25}
+          />
+
+          {/* 360도 방위 표시 마커 (0°, 90°, 180°, 270°) */}
+          <g className="text-[9px] fill-[#8d8d8d] dark:fill-[#525252] font-semibold select-none" textAnchor="middle">
+            <text x="160" y="16">0°</text>
+            <text x="264" y="108">90°</text>
+            <text x="160" y="200">180°</text>
+            <text x="56" y="108">270°</text>
+          </g>
 
           {/* 1. 머리 중심부에서 퍼져나가는 동심원 음파 (IBM Carbon Blue & Gray, 소리 위치 이동 반영) */}
           {isPlaying && (
@@ -191,7 +276,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
 
           {/* 4. 미니멀한 두상 */}
           <g transform="translate(160, 105)">
-            {/* 정면 방향을 가리키는 간접 화살표 그래픽 (텍스트 및 특수문자 제거 완료) */}
+            {/* 정면 방향을 가리키는 간접 화살표 그래픽 */}
             <g transform="translate(0, -68)">
               <path
                 d="M -4 4 L 0 -2 L 4 4"
@@ -284,11 +369,54 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
                 cy="0"
                 r={isBalanced ? 10 : 8}
                 fill={isBalanced ? '#198038' : '#0f62fe'}
-                opacity={isPlaying ? 0.95 : 0.6}
-                className={isPlaying ? 'animate-pulse' : ''}
+                opacity={isPlaying && channelMode === 'center' ? 0.95 : 0.4}
+                className={isPlaying && channelMode === 'center' ? 'animate-pulse' : ''}
               />
               <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
             </g>
+          </g>
+
+          {/* 360도 바이노럴 서라운드 회전 레이더 빔 */}
+          {channelMode === '360' && isPlaying && (
+            <line
+              x1="160"
+              y1="105"
+              x2={soundX}
+              y2={soundY}
+              stroke="currentColor"
+              className="text-[#0f62fe] dark:text-[#78a9ff]"
+              strokeWidth="1.2"
+              strokeDasharray="2 2"
+              opacity="0.6"
+            />
+          )}
+
+          {/* 실시간 각 소리 위치 지점 오버레이 오브 (Sound Location Indicator Orb) */}
+          <g
+            transform={`translate(${soundX}, ${soundY})`}
+            style={{ transition: channelMode === '360' ? 'none' : 'transform 0.2s cubic-bezier(0.2, 0, 0.38, 0.9)' }}
+          >
+            {isPlaying && (
+              <circle
+                cx="0"
+                cy="0"
+                r="13"
+                fill="none"
+                stroke={channelMode === 'center' && isBalanced ? '#198038' : '#0f62fe'}
+                className="animate-ping opacity-60"
+                strokeWidth="1.2"
+              />
+            )}
+            <circle
+              cx="0"
+              cy="0"
+              r={channelMode === '360' ? 6.5 : channelMode === 'center' ? 4 : 6}
+              fill={channelMode === 'center' && isBalanced ? '#198038' : '#0f62fe'}
+              stroke="#ffffff"
+              strokeWidth="1.5"
+              className="shadow-md"
+            />
+            <circle cx="0" cy="0" r="2" fill="#ffffff" />
           </g>
         </svg>
 
@@ -300,7 +428,7 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
         )}
       </div>
 
-      {/* L, center, R 채널 단독/양쪽 재생 전환 버튼 */}
+      {/* L, center, R, 360° 채널 단독/양쪽/회전 재생 전환 버튼 */}
       <div className="w-full flex items-center justify-center my-1 z-10">
         <div className="inline-flex p-0.5 rounded-lg bg-[#e8e8e8] dark:bg-[#262626] border border-[#e0e0e0] dark:border-[#393939] text-xs shadow-xs">
           <button
@@ -338,6 +466,19 @@ export const HeadVisualizer: React.FC<HeadVisualizerProps> = ({
             title="오른쪽(R) 채널만 단독 재생"
           >
             R
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectChannelMode?.('360')}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-150 cursor-pointer flex items-center gap-1 ${
+              channelMode === '360'
+                ? 'bg-[#0f62fe] text-white shadow-xs'
+                : 'text-[#525252] dark:text-[#c6c6c6] hover:text-[#161616] dark:hover:text-[#ffffff]'
+            }`}
+            title="바이노럴 360° 서라운드 회전 재생"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>360°</span>
           </button>
         </div>
       </div>
